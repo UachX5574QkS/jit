@@ -22,8 +22,42 @@ import {
   mockTenancies,
 } from './mockData';
 
-const BASE_URL = './ords/jit/v1';
+const BASE_URL = './ords/jit_schema/jit/v1';
 const USE_MOCK = import.meta.env.DEV; // Use mock data in development mode
+
+// OAuth2 credentials for ORDS authentication
+const OAUTH_CLIENT_ID = 'uDZzGENIfEFDF3MnULXhJw..';
+const OAUTH_CLIENT_SECRET = 'izOHtmHeAbsLoMFW3LGfYw..';
+const TOKEN_URL = './ords/jit_schema/oauth/token';
+
+let cachedToken: string | null = null;
+let tokenExpiry = 0;
+
+async function getAccessToken(): Promise<string> {
+  if (cachedToken && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
+  const credentials = btoa(`${OAUTH_CLIENT_ID}:${OAUTH_CLIENT_SECRET}`);
+  const response = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${credentials}`,
+    },
+    body: 'grant_type=client_credentials',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to obtain access token');
+  }
+
+  const data = await response.json();
+  cachedToken = data.access_token;
+  // Expire 60 seconds early to avoid edge cases
+  tokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  return cachedToken!;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -42,9 +76,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
+  const token = await getAccessToken();
   const response = await fetch(url, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     ...options,
   });
   if (!response.ok) {
