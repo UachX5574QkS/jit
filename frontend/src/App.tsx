@@ -1,6 +1,8 @@
 import { HashRouter, Routes, Route, Link, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthProvider';
+import { TimezoneProvider } from './context/TimezoneProvider';
+import { TimezoneSelector } from './components/TimezoneSelector';
 import { TargetDiscovery } from './components/TargetDiscovery';
 import { EventList } from './components/EventList';
 import { EventDetail } from './components/EventDetail';
@@ -98,6 +100,7 @@ function NavHeader() {
         <li><Link to="/events">My Requests</Link></li>
         <li><Link to="/admin">Admin</Link></li>
       </ul>
+      <TimezoneSelector />
     </nav>
   );
 }
@@ -145,9 +148,11 @@ function AppShell() {
 function App() {
   return (
     <HashRouter>
-      <AuthProvider>
-        <AppShell />
-      </AuthProvider>
+      <TimezoneProvider>
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      </TimezoneProvider>
     </HashRouter>
   );
 }

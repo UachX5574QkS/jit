@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { actionApproval, ApiError } from '../services/api';
+import { useTimezone } from '../context/TimezoneProvider';
 import type { ApprovalAction as ApprovalActionType, ApprovalActionResponse } from '../types/api';
 
 interface ApprovalActionProps {
@@ -13,10 +14,6 @@ interface ApprovalActionProps {
   description: string;
   status: string;
   onActionComplete?: () => void;
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString();
 }
 
 /**
@@ -36,6 +33,7 @@ export function ApprovalAction({
   status,
   onActionComplete,
 }: ApprovalActionProps) {
+  const { formatDateTime } = useTimezone();
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ApprovalActionResponse | null>(null);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getEvents, ApiError } from '../services/api';
+import { useTimezone } from '../context/TimezoneProvider';
 import type { BreakGlassEvent, EventStatus } from '../types/api';
 
 type StatusColor = 'green' | 'red' | 'amber';
@@ -26,10 +27,6 @@ function getStatusColor(status: EventStatus): StatusColor {
   }
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString();
-}
-
 /**
  * EventDetail displays the full details of a single break-glass event.
  * Fetches the event by filtering the events list by event_id from the URL params.
@@ -38,6 +35,7 @@ function formatDateTime(iso: string): string {
  */
 export function EventDetail() {
   const { eventId } = useParams<{ eventId: string }>();
+  const { formatDateTime } = useTimezone();
   const [event, setEvent] = useState<BreakGlassEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getEvents, ApiError } from '../services/api';
+import { useTimezone } from '../context/TimezoneProvider';
 import type { BreakGlassEvent, EventStatus } from '../types/api';
 
 type StatusColor = 'green' | 'red' | 'amber';
@@ -26,10 +27,6 @@ function getStatusColor(status: EventStatus): StatusColor {
   }
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString();
-}
-
 /**
  * EventList displays the user's break-glass events sorted by creation date (newest first).
  * Auto-refreshes every 30 seconds.
@@ -37,6 +34,7 @@ function formatDateTime(iso: string): string {
  * Validates: Requirements 12.1, 12.3, 12.4
  */
 export function EventList() {
+  const { formatDateTime } = useTimezone();
   const [events, setEvents] = useState<BreakGlassEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
