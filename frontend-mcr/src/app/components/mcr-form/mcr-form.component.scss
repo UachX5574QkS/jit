@@ -1,0 +1,45 @@
+.mcr-form-card {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.mcr-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.date-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-start;
+}
+
+.raci-error {
+  color: var(--mat-sys-error, #d32f2f);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 599px) {
+  .date-fields {
+    grid-template-columns: 1fr;
+  }
+}

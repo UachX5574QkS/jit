@@ -1,0 +1,11 @@
+<mat-form-field appearance="outline" class="user-switcher-field">
+  <mat-label>User</mat-label>
+  <mat-select
+    [value]="authService.currentUserId()"
+    (selectionChange)="onUserChange($event.value)"
+    aria-label="Switch user identity">
+    @for (user of users; track user.user_id) {
+      <mat-option [value]="user.user_id">{{ user.display_name }}</mat-option>
+    }
+  </mat-select>
+</mat-form-field>

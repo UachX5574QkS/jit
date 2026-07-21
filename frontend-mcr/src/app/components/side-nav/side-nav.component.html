@@ -1,0 +1,10 @@
+<nav class="side-nav">
+  @for (item of navItems; track item.route) {
+    <a class="nav-item"
+       [routerLink]="item.route"
+       routerLinkActive="active">
+      <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+      <span class="nav-label">{{ item.label }}</span>
+    </a>
+  }
+</nav>

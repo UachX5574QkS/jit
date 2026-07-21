@@ -1,0 +1,46 @@
+.raci-card {
+  margin-top: 16px;
+}
+
+.raci-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+.raci-field {
+  width: 100%;
+}
+
+.responsible-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8px 12px;
+  background: var(--color-bg-muted, #F8F7FA);
+  border: 1px solid var(--color-line, #E8E4EE);
+  border-radius: 8px;
+}
+
+.responsible-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple, #5A287D);
+  margin-bottom: 4px;
+}
+
+.responsible-text {
+  font-size: 13px;
+  color: var(--color-ink-2, #5B5B6E);
+  margin: 0;
+  font-style: italic;
+}
+
+@media (max-width: 599px) {
+  .raci-content {
+    grid-template-columns: 1fr;
+  }
+}

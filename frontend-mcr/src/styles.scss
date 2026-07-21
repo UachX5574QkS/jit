@@ -1,0 +1,190 @@
+@use '@angular/material' as mat;
+
+/* -------------------------------------------------------
+   MCR Manager — NW Purple Theme
+   Custom properties + Material overrides
+   ------------------------------------------------------- */
+
+:root {
+  --color-nw-purple: #5A287D;
+  --color-nw-purple-l: #7A4A9E;
+  --color-nw-purple-bg: #F3EFF8;
+  --color-bg: #F5F5F8;
+  --color-bg-muted: #F8F7FA;
+  --color-card: #FFFFFF;
+  --color-line: #E8E4EE;
+  --color-ink: #1A1A2E;
+  --color-ink-2: #5B5B6E;
+  --color-ink-3: #9B9BAE;
+  --color-red: #D5281B;
+  --color-green: #23A656;
+  --color-amber: #F2A900;
+}
+
+/* Keep Material baseline for component internals */
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$violet-palette,
+      theme-type: light
+    ),
+    typography: Roboto,
+    density: 0
+  ));
+}
+
+/* -------------------------------------------------------
+   Global Reset & Base Styles
+   ------------------------------------------------------- */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* -------------------------------------------------------
+   Content Cards
+   ------------------------------------------------------- */
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+/* -------------------------------------------------------
+   Buttons — Primary purple override
+   ------------------------------------------------------- */
+
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+button.mat-primary {
+  --mdc-filled-button-container-color: var(--color-nw-purple);
+  --mdc-filled-button-label-text-color: #fff;
+  border-radius: 8px;
+}
+
+.mat-mdc-raised-button.mat-primary:hover,
+.mat-mdc-unelevated-button.mat-primary:hover {
+  --mdc-filled-button-container-color: var(--color-nw-purple-l);
+  transform: translateY(-1px);
+}
+
+/* -------------------------------------------------------
+   Material Card overrides
+   ------------------------------------------------------- */
+
+.mat-mdc-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* -------------------------------------------------------
+   Table overrides
+   ------------------------------------------------------- */
+
+.mat-mdc-header-cell {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-ink-2);
+  text-transform: none;
+}
+
+.mat-mdc-cell {
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.mat-mdc-row:hover {
+  background: var(--color-nw-purple-bg) !important;
+}
+
+/* -------------------------------------------------------
+   Form Field overrides
+   ------------------------------------------------------- */
+
+.mat-mdc-form-field .mdc-floating-label {
+  color: var(--color-ink-2) !important;
+}
+
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: var(--color-line) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--color-nw-purple) !important;
+}
+
+/* -------------------------------------------------------
+   Spinner / Progress
+   ------------------------------------------------------- */
+
+.mat-mdc-progress-spinner circle {
+  stroke: var(--color-nw-purple) !important;
+}
+
+/* -------------------------------------------------------
+   Dialog overrides
+   ------------------------------------------------------- */
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: 12px !important;
+}
+
+/* -------------------------------------------------------
+   Semantic Colour Utilities
+   ------------------------------------------------------- */
+
+.color-success { color: var(--color-green); }
+.color-warning { color: var(--color-amber); }
+.color-error { color: var(--color-red); }
+
+/* -------------------------------------------------------
+   Spacing Utilities (4px baseline grid)
+   ------------------------------------------------------- */
+
+.spacing-xs { margin: 4px; }
+.spacing-s { margin: 8px; }
+.spacing-m { margin: 12px; }
+.spacing-l { margin: 16px; }
+.spacing-xl { margin: 24px; }
+.spacing-xxl { margin: 32px; }
+
+.padding-xs { padding: 4px; }
+.padding-s { padding: 8px; }
+.padding-m { padding: 12px; }
+.padding-l { padding: 16px; }
+.padding-xl { padding: 24px; }
+.padding-xxl { padding: 32px; }
+
+/* -------------------------------------------------------
+   Animations
+   ------------------------------------------------------- */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

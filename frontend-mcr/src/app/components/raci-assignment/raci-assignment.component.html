@@ -1,0 +1,53 @@
+<mat-card class="raci-card">
+  <mat-card-header>
+    <mat-card-title>Members and Roles</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="raci-content">
+    <mat-form-field appearance="outline" class="raci-field">
+      <mat-label>Accountable</mat-label>
+      <mat-select
+        multiple
+        [(value)]="accountableIds"
+        (selectionChange)="onSelectionChange()"
+        aria-label="Select accountable people">
+        @for (user of users; track user.user_id) {
+          <mat-option [value]="user.user_id">{{ user.display_name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>At least one required</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="raci-field">
+      <mat-label>Coordinators and Approvers</mat-label>
+      <mat-select
+        multiple
+        [(value)]="coordinatorIds"
+        (selectionChange)="onSelectionChange()"
+        aria-label="Select coordinators">
+        @for (user of users; track user.user_id) {
+          <mat-option [value]="user.user_id">{{ user.display_name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>People who can approve tasks, start the MCR, and send reports</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="raci-field">
+      <mat-label>Keep Informed</mat-label>
+      <mat-select
+        multiple
+        [(value)]="informedIds"
+        (selectionChange)="onSelectionChange()"
+        aria-label="Select people to keep informed">
+        @for (user of users; track user.user_id) {
+          <mat-option [value]="user.user_id">{{ user.display_name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>Email distribution list</mat-hint>
+    </mat-form-field>
+
+    <div class="raci-field responsible-info">
+      <label class="responsible-label">Responsible</label>
+      <p class="responsible-text">Auto-populated from Actioned By on tasks</p>
+    </div>
+  </mat-card-content>
+</mat-card>

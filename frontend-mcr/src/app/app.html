@@ -1,0 +1,19 @@
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="logo">MCR</span>
+    </div>
+    <app-side-nav />
+  </aside>
+  <div class="main-area">
+    <header class="top-header">
+      <h1 class="page-title">MCR Manager</h1>
+      <div class="header-actions">
+        <app-user-switcher />
+      </div>
+    </header>
+    <main class="content-area">
+      <router-outlet />
+    </main>
+  </div>
+</div>
