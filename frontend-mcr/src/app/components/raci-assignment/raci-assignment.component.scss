@@ -39,6 +39,22 @@
   font-style: italic;
 }
 
+.responsible-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.responsible-chip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--color-nw-purple-bg, #F3EFF8);
+  color: var(--color-nw-purple, #5A287D);
+}
+
 @media (max-width: 599px) {
   .raci-content {
     grid-template-columns: 1fr;

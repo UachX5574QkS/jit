@@ -128,5 +128,21 @@ CREATE OR REPLACE PACKAGE pkg_mcr_lifecycle AS
     ----------------------------------------------------------------------------
     PROCEDURE run_scheduled_transitions;
 
+    ----------------------------------------------------------------------------
+    -- check_ready_transition
+    --
+    -- Evaluates whether an MCR should auto-transition from Draft to Ready.
+    -- Conditions: total tasks > 0, all tasks have status IN ('Approved','Rejected'),
+    -- all tasks have a TCD document linked (doc_type_id = 1), and the MCR is
+    -- currently in 'Draft' status. If all conditions are met, updates the MCR
+    -- to 'Ready' and logs the transition in the audit trail.
+    --
+    -- Parameters:
+    --   p_mcr_id - ID of the MCR to evaluate
+    ----------------------------------------------------------------------------
+    PROCEDURE check_ready_transition(
+        p_mcr_id IN NUMBER
+    );
+
 END pkg_mcr_lifecycle;
 /

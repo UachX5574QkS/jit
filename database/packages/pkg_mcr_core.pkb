@@ -546,7 +546,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_core AS
                 'MCR is archived: Cannot cancel an MCR in terminal state ' || l_status);
         END IF;
 
-        IF l_status NOT IN ('Draft', 'Review', 'Active') THEN
+        IF l_status NOT IN ('Draft', 'Ready', 'Review', 'Active', 'Approved') THEN
             RAISE_APPLICATION_ERROR(-20003,
                 'MCR cannot be cancelled from state ' || l_status);
         END IF;

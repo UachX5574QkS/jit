@@ -20,6 +20,9 @@
     "@angular/material": "^22.0.4",
     "@angular/platform-browser": "^22.0.0",
     "@angular/router": "^22.0.0",
+    "cytoscape": "^3.34.0",
+    "cytoscape-dagre": "^4.0.0",
+    "dagre": "^0.8.5",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -27,6 +30,8 @@
     "@angular/build": "^22.0.6",
     "@angular/cli": "^22.0.6",
     "@angular/compiler-cli": "^22.0.0",
+    "@playwright/test": "^1.62.1",
+    "@types/cytoscape": "^3.21.9",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2"
   }

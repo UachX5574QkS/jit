@@ -36,5 +36,15 @@ export const routes: Routes = [
     path: 'admin',
     loadComponent: () =>
       import('./views/admin/admin.component').then(m => m.AdminComponent)
+  },
+  {
+    path: 'models',
+    loadComponent: () =>
+      import('./views/models/models.component').then(m => m.ModelsComponent)
+  },
+  {
+    path: 'workflows',
+    loadComponent: () =>
+      import('./views/workflows/workflows.component').then(m => m.WorkflowsComponent)
   }
 ];

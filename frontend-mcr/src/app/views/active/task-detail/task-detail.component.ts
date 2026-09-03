@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -39,6 +40,9 @@ import { AuthService } from '../../../services/auth.service';
         </button>
         <h2>Tasks — {{ mcrNumber }}</h2>
         <span class="spacer"></span>
+        <button mat-stroked-button (click)="showAllDescriptions = !showAllDescriptions; cdr.detectChanges()">
+          <mat-icon>{{ showAllDescriptions ? 'visibility_off' : 'visibility' }}</mat-icon> Descriptions
+        </button>
         <button mat-raised-button color="primary" (click)="addTask()">
           <mat-icon>add</mat-icon> Add Task
         </button>
@@ -70,7 +74,7 @@ import { AuthService } from '../../../services/auth.service';
                 <td mat-cell *matCellDef="let task" (click)="$event.stopPropagation()">
                   <div class="title-cell">
                     <span class="task-title clickable" (click)="toggleExpand(task)">{{ task.title }}</span>
-                    @if (isExpanded(task) && task.description) {
+                    @if ((showAllDescriptions || isExpanded(task)) && task.description) {
                       <div class="task-description">{{ task.description }}</div>
                     }
                   </div>
@@ -95,14 +99,19 @@ import { AuthService } from '../../../services/auth.service';
               <ng-container matColumnDef="task_status_text">
                 <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
                 <td mat-cell *matCellDef="let task">
-                  <span class="status-badge" [class]="'status-' + task.task_status.toLowerCase()">{{ task.task_status }}</span>
+                  <span class="status-badge" [class]="'status-' + task.task_status.toLowerCase()"
+                        [matTooltip]="task.closure_reason || ''"
+                        [matTooltipDisabled]="!task.closure_reason || (task.task_status !== 'Failed' && task.task_status !== 'Cancelled')">{{ task.task_status }}</span>
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="approval_action">
                 <th mat-header-cell *matHeaderCellDef>Approval Action</th>
                 <td mat-cell *matCellDef="let task" (click)="$event.stopPropagation()">
-                  @if (isTerminalStatus(task.task_status)) {
+                  @if (!canChangeStatus(task)) {
+                    <span class="status-badge" [class]="'status-' + task.task_status.toLowerCase()"
+                          matTooltip="Only coordinators/approvers or task implementors can change status">{{ task.task_status }}</span>
+                  } @else if (canUndo(task) && getStatusOptions(task).length === 0) {
                     <div class="status-with-undo">
                       <button mat-icon-button class="undo-btn" (click)="undoStatus(task); $event.stopPropagation()"
                               matTooltip="Undo status change">
@@ -155,7 +164,7 @@ import { AuthService } from '../../../services/auth.service';
               <ng-container matColumnDef="tcd">
                 <th mat-header-cell *matHeaderCellDef>TCD</th>
                 <td mat-cell *matCellDef="let task">
-                  @if (task.has_tcd === 1 || task.has_tcd === true) {
+                  @if (task.has_tcd === 1 || task.has_tcd === true || task.has_tcd === '1') {
                     <mat-icon class="indicator-green">check_circle</mat-icon>
                   } @else {
                     <mat-icon class="indicator-red">cancel</mat-icon>
@@ -214,11 +223,14 @@ import { AuthService } from '../../../services/auth.service';
     .status-blocked { background: #fff3e0; color: #e65100; }
     .status-blocked_dep { background: #fff3e0; color: #e65100; }
     .status-ready { background: #e3f2fd; color: #1565c0; }
-    .status-approved { background: #e8f5e9; color: #2e7d32; }
+    .status-approved { background: #e3f2fd; color: #1565c0; }
     .status-draft { background: #f5f5f5; color: #9e9e9e; }
     .status-pending { background: #fff8e1; color: #f57f17; }
     .status-started { background: var(--color-nw-purple-bg, #F3EFF8); color: var(--color-nw-purple, #5A287D); }
     .status-rejected { background: #fce4ec; color: #c62828; }
+    .status-partial_success { background: #fff3e0; color: #e65100; }
+    .status-skipped { background: #eceff1; color: #546e7a; }
+    .status-ready { background: #e3f2fd; color: #1565c0; }
 
     .status-with-undo {
       display: flex;
@@ -284,7 +296,7 @@ import { AuthService } from '../../../services/auth.service';
 export class TaskDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly cdr = inject(ChangeDetectorRef);
+  readonly cdr = inject(ChangeDetectorRef);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly authService = inject(AuthService);
@@ -292,12 +304,14 @@ export class TaskDetailComponent implements OnInit {
   mcrId!: number;
   mcrNumber = '';
   mcrStatus = '';
+  coordinatorIds: number[] = [];
   tasks: any[] = [];
   sortedTasks: any[] = [];
   loading = true;
   departments: any[] = [];
   users: any[] = [];
   teams: any[] = [];
+  showAllDescriptions = false;
 
   readonly displayedColumns = ['task_seq', 'dependencies', 'jira_reference', 'title', 'owner_dept_id', 'created_by_user_id', 'implementor', 'est_start', 'task_status_text', 'approval_action', 'status_changed_by', 'soe', 'backout', 'tcd'];
 
@@ -357,29 +371,57 @@ export class TaskDetailComponent implements OnInit {
 
   getStatusOptions(task: any): string[] {
     const status = task.task_status;
-    if (['Complete', 'Failed', 'Blocked_Dep'].includes(status)) return [];
+    // Terminal/frozen states — no options ever
+    if (['Complete', 'Failed', 'Partial_Success', 'Skipped', 'Blocked_Dep'].includes(status)) return [];
 
     // Pre-MCR-start states
     if (['Draft', 'Ready', 'Approved'].includes(this.mcrStatus)) {
-      if (status === 'Draft') return []; // Need SOE + Backout first (auto-transitions to Pending)
+      if (status === 'Draft') return []; // Need all fields populated first
       if (status === 'Pending') return ['Approve', 'Rejected', 'Cancel'];
-      if (status === 'Approved' || status === 'Rejected' || status === 'Cancelled') return []; // Terminal pre-start (undo available)
+      if (status === 'Approved' || status === 'Rejected' || status === 'Cancelled') return []; // Undo available
       return [];
     }
 
     // MCR Active/Active_Late
     if (this.mcrStatus === 'Active' || this.mcrStatus === 'Active_Late') {
-      if (status === 'Approved') return ['Started', 'Cancelled'];
+      if (status === 'Ready') return ['Started', 'Skipped', 'Cancelled'];
+      if (status === 'Pending') return []; // Waiting for deps — can't start yet
+      if (status === 'Approved') return ['Started', 'Skipped', 'Cancelled']; // Legacy approved tasks
       if (status === 'Started') {
-        // Check deps for Complete
         const depsBlocked = this.areDepsBlocked(task);
-        if (depsBlocked) return ['Cancelled', 'Failed'];
-        return ['Complete', 'Cancelled', 'Failed'];
+        if (depsBlocked) return ['Cancelled', 'Failed', 'Partial_Success'];
+        return ['Complete', 'Failed', 'Partial_Success', 'Cancelled'];
       }
       if (status === 'Cancelled' || status === 'Rejected') return [];
       return [];
     }
     return [];
+  }
+
+  /**
+   * Permission check: determines if the current user can change the status of a task.
+   * - Pre-start approval actions (Approve/Rejected/Cancel): user must be a coordinator
+   * - Active MCR actions (Started/Complete/Failed/Cancelled): user must be the task's implementor OR a coordinator
+   */
+  canChangeStatus(task: any): boolean {
+    const currentUserId = this.authService.getCurrentUserId();
+    const isCoordinator = this.coordinatorIds.includes(currentUserId);
+
+    // Coordinators can always change status
+    if (isCoordinator) return true;
+
+    // For active MCR states, the task implementor can also change status
+    if (this.mcrStatus === 'Active' || this.mcrStatus === 'Active_Late') {
+      return task.implementor_id === currentUserId;
+    }
+
+    // For pre-start states (Draft, Ready, Approved), only coordinators can approve/reject
+    // implementor_id also gets access for their own tasks
+    if (['Draft', 'Ready', 'Approved'].includes(this.mcrStatus)) {
+      return task.implementor_id === currentUserId;
+    }
+
+    return false;
   }
 
   areDepsBlocked(task: any): boolean {
@@ -397,7 +439,27 @@ export class TaskDetailComponent implements OnInit {
   }
 
   isTerminalStatus(status: string): boolean {
-    return ['Complete', 'Cancelled', 'Failed', 'Approved', 'Rejected'].includes(status);
+    return ['Complete', 'Cancelled', 'Failed', 'Approved', 'Rejected', 'Partial_Success', 'Skipped'].includes(status);
+  }
+
+  /** Whether undo should be shown for this task */
+  canUndo(task: any): boolean {
+    // Only show undo if there's a previous_status AND the task has actually been changed
+    if (!task.previous_status) return false;
+    // Don't undo Skipped tasks
+    if (task.task_status === 'Skipped') return false;
+    // Don't undo if task is in a closure state and downstream tasks have progressed
+    if (['Complete', 'Failed', 'Partial_Success'].includes(task.task_status)) {
+      // Check if any task depends on this one and has moved past Approved/Ready/Pending
+      const dependents = this.tasks.filter(t =>
+        (t.hard_dep_ids || '').split(',').map((s: string) => s.trim()).includes(String(task.task_id))
+      );
+      const hasProgressed = dependents.some(t =>
+        ['Started', 'Complete', 'Failed', 'Partial_Success'].includes(t.task_status)
+      );
+      if (hasProgressed) return false;
+    }
+    return true;
   }
 
   async loadData(): Promise<void> {
@@ -410,6 +472,22 @@ export class TaskDetailComponent implements OnInit {
         const mcr = await mcrRes.json();
         this.mcrNumber = mcr?.mcr_number ?? `MCR #${this.mcrId}`;
         this.mcrStatus = mcr?.mcr_status ?? '';
+        // Parse coordinators_csv into an array of user IDs for permission checks
+        const csv = mcr?.coordinators_csv ?? '';
+        this.coordinatorIds = csv
+          .split(',')
+          .map((id: string) => id.trim())
+          .filter((id: string) => id !== '')
+          .map((id: string) => Number(id));
+
+        // Active_Late check: if MCR is Active and past estimated end date
+        if (this.mcrStatus === 'Active' && mcr?.estimated_end_date) {
+          const end = new Date(mcr.estimated_end_date);
+          end.setHours(23, 59, 59);
+          if (new Date() > end) {
+            this.mcrStatus = 'Active_Late';
+          }
+        }
       }
     } catch {
       this.mcrNumber = `MCR #${this.mcrId}`;
@@ -430,6 +508,34 @@ export class TaskDetailComponent implements OnInit {
     this.sortedTasks = [...this.tasks];
     this.loading = false;
     this.cdr.detectChanges();
+
+    await this.checkReadyTransition();
+  }
+
+  private async checkReadyTransition(): Promise<void> {
+    if (this.mcrStatus !== 'Draft' || this.tasks.length === 0) return;
+
+    const allApprovedOrRejected = this.tasks.every(t =>
+      t.task_status === 'Approved' || t.task_status === 'Rejected'
+    );
+    const allHaveTcd = this.tasks.every(t => t.has_tcd === 1 || t.has_tcd === true || t.has_tcd === '1');
+
+    if (allApprovedOrRejected && allHaveTcd) {
+      try {
+        const res = await fetch(`/ords/jit_schema/mcr/v1/requests/${this.mcrId}/lifecycle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'auto_ready', user_id: this.authService.getCurrentUserId() })
+        });
+        if (res.ok) {
+          this.mcrStatus = 'Ready';
+          this.snackBar.open('MCR auto-transitioned to Ready', 'OK', { duration: 4000 });
+          this.cdr.detectChanges();
+        }
+      } catch {
+        // Silent fail on auto-transition
+      }
+    }
   }
 
   async onStatusChange(task: any, newStatus: string): Promise<void> {
@@ -442,11 +548,46 @@ export class TaskDetailComponent implements OnInit {
     // Started, Complete, Failed, Cancelled stay as-is
 
     const userId = this.authService.getCurrentUserId();
-    const payload = {
+
+    // If Failed, Cancelled, Partial_Success, or Skipped, prompt for closure reason
+    let closureReason: string | undefined;
+    if (['Failed', 'Cancelled', 'Partial_Success', 'Skipped'].includes(actualStatus)) {
+      const { ClosureReasonDialogComponent } = await import('../../../components/closure-reason-dialog/closure-reason-dialog.component');
+      const dialogRef = this.dialog.open(ClosureReasonDialogComponent, {
+        width: '500px',
+        data: { action: actualStatus }
+      });
+      const reason = await firstValueFrom(dialogRef.afterClosed());
+      if (!reason) return; // User cancelled the dialog, abort status change
+      closureReason = reason;
+    }
+
+    const payload: any = {
       user_id: userId,
       task_id: task.task_id,
       new_status: actualStatus
     };
+    if (closureReason) {
+      payload.closure_reason = closureReason;
+    }
+
+    // Dependency cascade logic
+    if (actualStatus === 'Failed') {
+      payload.cascade_action = 'block';
+    } else if (actualStatus === 'Cancelled') {
+      const affected = this.tasks.filter(t =>
+        (t.hard_dep_ids || '').split(',').map((s: string) => s.trim()).includes(String(task.task_id))
+      );
+      if (affected.length > 0) {
+        const titles = affected.map((t: any) => `${t.task_seq}. ${t.title}`).join('\n');
+        const convert = confirm(
+          `The following tasks have a "Must Succeed" dependency on this task:\n${titles}\n\nConvert to "Any Status" dependency?`
+        );
+        if (convert) {
+          payload.cascade_action = 'convert_to_soft';
+        }
+      }
+    }
 
     try {
       const res = await fetch('/ords/jit_schema/mcr/v1/tasks/status', {
@@ -459,6 +600,9 @@ export class TaskDetailComponent implements OnInit {
         task.previous_status = task.task_status;
         task.task_status = actualStatus;
         task.status_changed_by_user_id = userId;
+        if (closureReason) {
+          task.closure_reason = closureReason;
+        }
         this.snackBar.open(`Status updated to ${actualStatus}`, 'OK', { duration: 3000 });
       } else {
         this.snackBar.open('Failed to update status', 'OK', { duration: 4000 });
@@ -506,9 +650,10 @@ export class TaskDetailComponent implements OnInit {
 
   editTask(task: any): void {
     import('./edit-task-dialog.component').then(m => {
+      const readOnlyStatuses = ['Active', 'Active_Late', 'Complete', 'Partial_Complete', 'Cancelled', 'Failed', 'DNF'];
       const dialogRef = this.dialog.open(m.EditTaskDialogComponent, {
         width: '650px',
-        data: { mcrId: this.mcrId, task, readOnly: this.mcrStatus === 'Active', mcrStatus: this.mcrStatus, tasks: this.tasks }
+        data: { mcrId: this.mcrId, task, readOnly: readOnlyStatuses.includes(this.mcrStatus), mcrStatus: this.mcrStatus, tasks: this.tasks }
       });
       dialogRef.afterClosed().subscribe(result => {
         if (result) {

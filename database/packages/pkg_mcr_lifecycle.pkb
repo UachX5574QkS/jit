@@ -335,5 +335,87 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_lifecycle AS
         END LOOP;
     END run_scheduled_transitions;
 
+    ----------------------------------------------------------------------------
+    -- check_ready_transition
+    --
+    -- Auto-transitions MCR from Draft to Ready when all conditions are met:
+    --   1. At least one task exists
+    --   2. All tasks have task_status IN ('Approved', 'Rejected')
+    --   3. All tasks have a TCD document linked (doc_type_id = 1)
+    --   4. MCR is currently in 'Draft' status
+    ----------------------------------------------------------------------------
+    PROCEDURE check_ready_transition(
+        p_mcr_id IN NUMBER
+    ) IS
+        c_system_user_id   CONSTANT NUMBER := 0;
+        l_mcr_status       tab_mcr_requests.mcr_status%TYPE;
+        l_total_tasks      NUMBER;
+        l_approved_rej     NUMBER;
+        l_has_tcd          NUMBER;
+    BEGIN
+        -- Get current MCR status
+        SELECT mcr_status
+          INTO l_mcr_status
+          FROM tab_mcr_requests
+         WHERE mcr_id = p_mcr_id;
+
+        -- Only proceed if MCR is in Draft status
+        IF l_mcr_status != 'Draft' THEN
+            RETURN;
+        END IF;
+
+        -- Count total tasks for this MCR
+        SELECT COUNT(*)
+          INTO l_total_tasks
+          FROM tab_mcr_tasks
+         WHERE mcr_id = p_mcr_id;
+
+        -- Must have at least one task
+        IF l_total_tasks = 0 THEN
+            RETURN;
+        END IF;
+
+        -- Count tasks with status IN ('Approved', 'Rejected')
+        SELECT COUNT(*)
+          INTO l_approved_rej
+          FROM tab_mcr_tasks
+         WHERE mcr_id = p_mcr_id
+           AND task_status IN ('Approved', 'Rejected');
+
+        -- Count tasks that have a TCD document linked (doc_type_id = 1)
+        SELECT COUNT(DISTINCT t.task_id)
+          INTO l_has_tcd
+          FROM tab_mcr_tasks t
+         WHERE t.mcr_id = p_mcr_id
+           AND EXISTS (
+               SELECT 1
+                 FROM tab_mcr_doc_links dl
+                 JOIN tab_mcr_documents d ON dl.document_id = d.document_id
+                WHERE dl.task_id = t.task_id
+                  AND d.doc_type_id = 1
+           );
+
+        -- All three counts must equal total tasks
+        IF l_total_tasks = l_approved_rej
+           AND l_total_tasks = l_has_tcd THEN
+
+            -- Transition to Ready
+            UPDATE tab_mcr_requests
+               SET mcr_status = 'Ready',
+                   updated_at = SYSTIMESTAMP
+             WHERE mcr_id = p_mcr_id;
+
+            -- Log audit trail
+            pkg_mcr_audit.log_change(
+                p_user_id     => c_system_user_id,
+                p_operation   => 'UPDATE',
+                p_object_type => 'MCR',
+                p_object_id   => p_mcr_id,
+                p_old_values  => '{"mcr_status":"Draft"}',
+                p_new_values  => '{"mcr_status":"Ready"}'
+            );
+        END IF;
+    END check_ready_transition;
+
 END pkg_mcr_lifecycle;
 /

@@ -47,7 +47,15 @@
 
     <div class="raci-field responsible-info">
       <label class="responsible-label">Responsible</label>
-      <p class="responsible-text">Auto-populated from Actioned By on tasks</p>
+      @if (responsibleNames.length > 0) {
+        <div class="responsible-list">
+          @for (name of responsibleNames; track name) {
+            <span class="responsible-chip">{{ name }}</span>
+          }
+        </div>
+      } @else {
+        <p class="responsible-text">Auto-populated from Actioned By on tasks</p>
+      }
     </div>
   </mat-card-content>
 </mat-card>

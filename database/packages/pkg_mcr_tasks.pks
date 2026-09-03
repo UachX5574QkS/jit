@@ -1,13 +1,11 @@
 CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     /*
     ** PKG_MCR_TASKS
-    ** Task CRUD, dependency validation, task status management, and action
-    ** management for MCR Manager. Handles creation of tasks with sequential
-    ** IDs, dependency graph validation (self-reference and circular detection),
-    ** task status transitions with permission checks, and ordered action steps.
+    ** Task CRUD, dependency validation, task status management, action
+    ** management, and dependency cascade for MCR Manager.
     **
     ** Requirements 4.3, 4.4, 4.5, 5.3: Task operations with dependency
-    ** validation, sequential ordering, and action management.
+    ** validation, sequential ordering, action management, and cascade logic.
     */
 
     ----------------------------------------------------------------------------
@@ -71,28 +69,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     --
     -- Updates an existing task. Validates editable state, re-validates
     -- dependencies, updates the record, triggers handle_task_modification if
-    -- the parent MCR is Approved, and records the change in the audit log
-    -- with both old and new values.
-    --
-    -- Parameters:
-    --   p_user_id        - Numeric ID of the acting user
-    --   p_task_id        - ID of the task to update
-    --   p_title          - New title value
-    --   p_description    - New description value
-    --   p_jira_ref       - New Jira reference value
-    --   p_start_time     - New planned start time
-    --   p_duration       - New estimated duration in minutes
-    --   p_owner_dept_id  - New owning department ID
-    --   p_implementor_id - New implementor ID
-    --   p_impl_type      - New implementor type: 'USER' or 'DEPARTMENT'
-    --   p_benefits       - New benefits description
-    --   p_hard_deps      - New comma-separated hard dependency task_ids
-    --   p_soft_deps      - New comma-separated soft dependency task_ids
-    --
-    -- Raises:
-    --   e_task_not_found      - If the task_id does not exist
-    --   e_self_dependency     - If dependencies reference the task itself
-    --   e_circular_dependency - If dependencies would create a cycle
+    -- the parent MCR is Approved, and records the change in the audit log.
     ----------------------------------------------------------------------------
     PROCEDURE update_task(
         p_user_id        IN NUMBER,
@@ -114,15 +91,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     -- delete_task
     --
     -- Deletes a task and its associated dependencies. Only permitted when the
-    -- parent MCR is in Draft or Review status. Records the deletion in the
-    -- audit log.
-    --
-    -- Parameters:
-    --   p_user_id - Numeric ID of the acting user
-    --   p_task_id - ID of the task to delete
-    --
-    -- Raises:
-    --   e_task_not_found - If the task_id does not exist
+    -- parent MCR is in Draft or Review status.
     ----------------------------------------------------------------------------
     PROCEDURE delete_task(
         p_user_id IN NUMBER,
@@ -132,11 +101,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- get_tasks
     --
-    -- Returns all tasks for a given MCR with dependency information as JSON
-    -- via APEX_JSON output.
-    --
-    -- Parameters:
-    --   p_mcr_id - MCR identifier to retrieve tasks for
+    -- Returns all tasks for a given MCR with dependency information as JSON.
     ----------------------------------------------------------------------------
     PROCEDURE get_tasks(
         p_mcr_id IN NUMBER
@@ -146,18 +111,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     -- change_task_status
     --
     -- Changes the status of a task after validating that the acting user has
-    -- permission (Management Group, Owning Team, or task Author). Records the
-    -- status change in the audit log.
-    --
-    -- Parameters:
-    --   p_user_id    - Numeric ID of the acting user
-    --   p_task_id    - ID of the task to update
-    --   p_new_status - New status value (Blocked, Ready, Complete, Cancelled,
-    --                  Failed)
-    --
-    -- Raises:
-    --   e_task_not_found    - If the task_id does not exist
-    --   e_insufficient_perm - If the user lacks permission to change status
+    -- permission (Management Group, Owning Team, or task Author).
     ----------------------------------------------------------------------------
     PROCEDURE change_task_status(
         p_user_id    IN NUMBER,
@@ -166,14 +120,27 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     );
 
     ----------------------------------------------------------------------------
-    -- get_dependency_map
+    -- cascade_cancel_deps
     --
-    -- Returns task nodes and dependency edges for an MCR as JSON, suitable
-    -- for rendering a directed dependency graph. Includes task status, title,
-    -- and dependency types.
+    -- Handles dependency cascading when a task is Cancelled or Failed.
+    -- For tasks that have a HARD dependency on p_task_id:
+    --   If p_convert_to_soft = TRUE: converts the HARD dep to SOFT
+    --     (dependency becomes "Any Status" instead of "Must Succeed")
+    --   If p_convert_to_soft = FALSE: sets affected tasks to Blocked_Dep status
     --
     -- Parameters:
-    --   p_mcr_id - MCR identifier to build the dependency map for
+    --   p_task_id         - The task that was cancelled/failed
+    --   p_convert_to_soft - TRUE to convert hard deps to soft, FALSE to block
+    ----------------------------------------------------------------------------
+    PROCEDURE cascade_cancel_deps(
+        p_task_id         IN NUMBER,
+        p_convert_to_soft IN BOOLEAN DEFAULT FALSE
+    );
+
+    ----------------------------------------------------------------------------
+    -- get_dependency_map
+    --
+    -- Returns task nodes and dependency edges for an MCR as JSON.
     ----------------------------------------------------------------------------
     PROCEDURE get_dependency_map(
         p_mcr_id IN NUMBER
@@ -182,11 +149,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- get_actions
     --
-    -- Returns all actions for a given task in execution order (by
-    -- ordinal_position) as JSON via APEX_JSON output.
-    --
-    -- Parameters:
-    --   p_task_id - Task identifier to retrieve actions for
+    -- Returns all actions for a given task in execution order.
     ----------------------------------------------------------------------------
     PROCEDURE get_actions(
         p_task_id IN NUMBER
@@ -195,14 +158,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- create_action
     --
-    -- Creates a new action step within a task. Assigns the next ordinal
-    -- position (max + 1) and records the creation in the audit log.
-    --
-    -- Parameters:
-    --   p_user_id     - Numeric ID of the acting user
-    --   p_task_id     - Parent task identifier
-    --   p_title       - Short title describing the action step
-    --   p_description - Detailed description of the action
+    -- Creates a new action step within a task.
     ----------------------------------------------------------------------------
     PROCEDURE create_action(
         p_user_id     IN NUMBER,
@@ -214,14 +170,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- update_action
     --
-    -- Updates an existing action's title and description. Records the change
-    -- in the audit log with old and new values.
-    --
-    -- Parameters:
-    --   p_user_id     - Numeric ID of the acting user
-    --   p_action_id   - ID of the action to update
-    --   p_title       - New title value
-    --   p_description - New description value
+    -- Updates an existing action's title and description.
     ----------------------------------------------------------------------------
     PROCEDURE update_action(
         p_user_id     IN NUMBER,
@@ -233,12 +182,7 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- delete_action
     --
-    -- Deletes an action and reorders remaining actions to maintain contiguous
-    -- ordinal positions. Records the deletion in the audit log.
-    --
-    -- Parameters:
-    --   p_user_id   - Numeric ID of the acting user
-    --   p_action_id - ID of the action to delete
+    -- Deletes an action and reorders remaining actions.
     ----------------------------------------------------------------------------
     PROCEDURE delete_action(
         p_user_id   IN NUMBER,
@@ -249,19 +193,6 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     -- update_action_statuses
     --
     -- Batch updates action statuses for a task with an optional comment.
-    -- Validates that the acting user is in the Management Group or Owning
-    -- Team. Records each status change in the audit log, including the
-    -- comment if provided.
-    --
-    -- Parameters:
-    --   p_user_id      - Numeric ID of the acting user
-    --   p_task_id      - Parent task identifier
-    --   p_statuses_json - CLOB containing JSON array of action status updates
-    --                     (each element: {action_id, status})
-    --   p_comment      - Optional comment accompanying the status changes
-    --
-    -- Raises:
-    --   e_insufficient_perm - If the user lacks permission to update statuses
     ----------------------------------------------------------------------------
     PROCEDURE update_action_statuses(
         p_user_id       IN NUMBER,
@@ -273,22 +204,8 @@ CREATE OR REPLACE PACKAGE pkg_mcr_tasks AS
     ----------------------------------------------------------------------------
     -- validate_dependencies
     --
-    -- Validates that the proposed hard and soft dependencies for a task do not
-    -- create self-references or circular dependency chains. Uses a recursive
-    -- CTE to traverse the existing dependency graph.
-    --
-    -- Parameters:
-    --   p_mcr_id    - MCR identifier (scope for dependency validation)
-    --   p_task_id   - Task being validated (or NULL for a new task)
-    --   p_hard_deps - Comma-separated list of hard dependency task_ids
-    --   p_soft_deps - Comma-separated list of soft dependency task_ids
-    --
-    -- Returns:
-    --   TRUE if dependencies are valid (no self-ref or cycle), FALSE otherwise
-    --
-    -- Raises:
-    --   e_self_dependency     - If any dependency references the task itself
-    --   e_circular_dependency - If adding dependencies would create a cycle
+    -- Validates that proposed dependencies do not create self-references or
+    -- circular dependency chains.
     ----------------------------------------------------------------------------
     FUNCTION validate_dependencies(
         p_mcr_id    IN NUMBER,

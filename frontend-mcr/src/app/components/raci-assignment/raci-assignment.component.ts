@@ -39,6 +39,7 @@ export class RACIAssignmentComponent {
   @Input() users: User[] = [];
   @Input() departments: Department[] = [];
   @Input() teams: Team[] = [];
+  @Input() responsibleNames: string[] = [];
   @Output() raciChange = new EventEmitter<RACIEntry[]>();
 
   accountableIds: number[] = [];

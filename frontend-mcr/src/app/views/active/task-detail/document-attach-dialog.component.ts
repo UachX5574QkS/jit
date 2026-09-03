@@ -17,6 +17,7 @@ export interface DocumentAttachDialogData {
   mcrId: number;
   taskId: number;
   taskTitle: string;
+  mcrStatus?: string;
 }
 
 @Component({
@@ -53,6 +54,7 @@ export interface DocumentAttachDialogData {
               @for (doc of documents; track doc.document_id) {
                 <div class="doc-item">
                   <mat-checkbox [checked]="isLinked(doc.document_id)"
+                                [disabled]="isLinked(doc.document_id) && isTerminalMcrStatus"
                                 (change)="toggleLink(doc.document_id, $event.checked)">
                     {{ doc.title }}
                   </mat-checkbox>
@@ -135,6 +137,7 @@ export class DocumentAttachDialogComponent implements OnInit {
   loading = true;
   saving = false;
   uploading = false;
+  isTerminalMcrStatus = false;
 
   documentTypes: any[] = [];
   uploadDocType = '';
@@ -143,6 +146,8 @@ export class DocumentAttachDialogComponent implements OnInit {
   selectedFile: File | null = null;
 
   ngOnInit(): void {
+    const terminalStatuses = ['Complete', 'Partial_Complete', 'Cancelled', 'Failed', 'DNF'];
+    this.isTerminalMcrStatus = terminalStatuses.includes(this.data.mcrStatus || '');
     this.loadDocuments();
     this.loadDocumentTypes();
   }

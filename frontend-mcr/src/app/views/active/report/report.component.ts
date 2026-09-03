@@ -67,11 +67,11 @@ import { AuthService } from '../../../services/auth.service';
               </div>
               <div class="detail-item">
                 <span class="label">Start Date</span>
-                <span class="value">{{ mcr?.start_date | date:'mediumDate' }}</span>
+                <span class="value">{{ formatDate(mcr?.estimated_start_date) }}</span>
               </div>
               <div class="detail-item">
                 <span class="label">End Date</span>
-                <span class="value">{{ mcr?.end_date | date:'mediumDate' }}</span>
+                <span class="value">{{ formatDate(mcr?.estimated_end_date) }}</span>
               </div>
               <div class="detail-item">
                 <span class="label">Status</span>
@@ -103,13 +103,13 @@ import { AuthService } from '../../../services/auth.service';
                 <tbody>
                   @for (entry of raci; track entry) {
                     <tr>
-                      <td>{{ entry.user_name || entry.name || '—' }}</td>
+                      <td>{{ entry.display_name || entry.user_name || entry.name || '—' }}</td>
                       <td>
                         <span class="role-badge" [class]="'role-' + (entry.raci_role || entry.role || '').toLowerCase()">
                           {{ entry.raci_role || entry.role }}
                         </span>
                       </td>
-                      <td>{{ entry.department_name || entry.department || '—' }}</td>
+                      <td>{{ entry.department || '—' }}</td>
                     </tr>
                   }
                 </tbody>
@@ -456,5 +456,12 @@ export class ReportComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/active']);
+  }
+
+  formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '—';
+    const parts = dateStr.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
   }
 }

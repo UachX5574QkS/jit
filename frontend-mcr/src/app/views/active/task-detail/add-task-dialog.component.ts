@@ -1,12 +1,14 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../services/auth.service';
+import { DocumentAttachDialogComponent, DocumentAttachDialogData } from './document-attach-dialog.component';
 
 export interface AddTaskDialogData {
   mcrId: number;
@@ -22,6 +24,7 @@ export interface AddTaskDialogData {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatSnackBarModule
   ],
   template: `
@@ -146,7 +149,7 @@ export interface AddTaskDialogData {
       <!-- Documents Section -->
       <div class="section-divider">
         <h4 class="section-title">Documents</h4>
-        <p class="hint-text">Save the task first, then attach documents via the task edit dialog.</p>
+        <mat-checkbox [formControl]="attachDocsControl">Attach documents after save</mat-checkbox>
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -183,10 +186,6 @@ export interface AddTaskDialogData {
       color: var(--color-nw-purple, #5A287D);
       margin: 0 0 12px;
     }
-    .hint-text {
-      font-size: 12px;
-      color: rgba(0,0,0,0.54);
-    }
   `]
 })
 export class AddTaskDialogComponent implements OnInit {
@@ -195,6 +194,7 @@ export class AddTaskDialogComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly dialog = inject(MatDialog);
 
   departments: any[] = [];
   teams: any[] = [];
@@ -207,6 +207,7 @@ export class AddTaskDialogComponent implements OnInit {
 
   subActionsControl = new FormControl('');
   backoutPlanControl = new FormControl('');
+  attachDocsControl = new FormControl(false);
 
   form = new FormGroup({
     title: new FormControl('', [Validators.required]),
@@ -358,8 +359,18 @@ export class AddTaskDialogComponent implements OnInit {
       });
 
       if (res.ok || res.status === 201) {
+        const result = await res.json().catch(() => ({}));
+        const newTaskId = result.task_id;
+
         this.snackBar.open('Task created', 'Close', { duration: 3000 });
-        this.dialogRef.close(true);
+
+        if (this.attachDocsControl.value && newTaskId) {
+          this.saving = false;
+          this.cdr.detectChanges();
+          this.openDocumentAttachDialog(newTaskId, payload.title ?? 'New Task');
+        } else {
+          this.dialogRef.close(true);
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         this.snackBar.open(err.error || 'Failed to create task', 'Close', { duration: 5000 });
@@ -370,5 +381,22 @@ export class AddTaskDialogComponent implements OnInit {
       this.saving = false;
     }
     this.cdr.detectChanges();
+  }
+
+  private openDocumentAttachDialog(taskId: number, taskTitle: string): void {
+    const dialogData: DocumentAttachDialogData = {
+      mcrId: this.data.mcrId,
+      taskId,
+      taskTitle
+    };
+
+    const docDialogRef = this.dialog.open(DocumentAttachDialogComponent, {
+      width: '560px',
+      data: dialogData
+    });
+
+    docDialogRef.afterClosed().subscribe(() => {
+      this.dialogRef.close(true);
+    });
   }
 }

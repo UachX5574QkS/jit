@@ -20,6 +20,8 @@ export class SideNavComponent {
     { label: 'Create', icon: 'add_circle', route: '/create' },
     { label: 'Active', icon: 'play_circle', route: '/active' },
     { label: 'Archived', icon: 'archive', route: '/archived' },
-    { label: 'Admin', icon: 'settings', route: '/admin' }
+    { label: 'Models', icon: 'content_copy', route: '/models' },
+    { label: 'Admin', icon: 'settings', route: '/admin' },
+    { label: 'Workflows', icon: 'account_tree', route: '/workflows' }
   ];
 }

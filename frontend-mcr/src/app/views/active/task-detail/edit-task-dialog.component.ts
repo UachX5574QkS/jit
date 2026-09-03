@@ -45,8 +45,8 @@ export interface EditTaskDialogData {
   template: `
     <h2 mat-dialog-title>Edit Task — {{ data.task.title }}</h2>
     <mat-dialog-content>
-      @if (data.readOnly) {
-        <p class="readonly-note">MCR is active — changes to task details are disabled</p>
+      @if (isReadOnly) {
+        <p class="readonly-note">Task details are read-only while MCR is active. Only documents can be attached.</p>
       }
 
       @if (data.mcrStatus === 'Active' && !isTerminalStatus(data.task.task_status) && data.task.task_status !== 'Blocked') {
@@ -57,6 +57,16 @@ export interface EditTaskDialogData {
               <mat-radio-button [value]="opt" class="status-radio">{{ opt }}</mat-radio-button>
             }
           </mat-radio-group>
+        </div>
+      }
+
+      @if (data.task.closure_reason) {
+        <div class="closure-reason-section">
+          <h4 class="section-title">Closure Reason</h4>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Reason for {{ data.task.task_status }}</mat-label>
+            <textarea matInput [value]="data.task.closure_reason" disabled rows="3"></textarea>
+          </mat-form-field>
         </div>
       }
 
@@ -193,10 +203,12 @@ export interface EditTaskDialogData {
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-stroked-button mat-dialog-close>Cancel</button>
-      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving || form.invalid || data.readOnly">
-        {{ saving ? 'Saving...' : 'Save Changes' }}
-      </button>
+      <button mat-stroked-button mat-dialog-close>{{ isReadOnly ? 'Close' : 'Cancel' }}</button>
+      @if (!isReadOnly) {
+        <button mat-raised-button color="primary" (click)="onSave()" [disabled]="saving || form.invalid">
+          {{ saving ? 'Saving...' : 'Save Changes' }}
+        </button>
+      }
     </mat-dialog-actions>
   `,
   styles: [`
@@ -220,6 +232,11 @@ export interface EditTaskDialogData {
       margin-bottom: 12px;
     }
     .status-section {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-line, #E8E4EE);
+    }
+    .closure-reason-section {
       margin-bottom: 16px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--color-line, #E8E4EE);
@@ -277,6 +294,8 @@ export class EditTaskDialogComponent implements OnInit {
   saving = false;
   linkedDocs: any[] = [];
   selectedStatus = '';
+  isReadOnly = false;
+  isTerminalMcrStatus = false;
 
   subActionsControl = new FormControl('');
   backoutPlanControl = new FormControl('');
@@ -303,10 +322,22 @@ export class EditTaskDialogComponent implements OnInit {
     this.loadOtherTasks();
     this.loadLinkedDocs();
     this.populateForm();
-    if (this.data.readOnly) {
+    this.applyReadOnlyState();
+  }
+
+  private applyReadOnlyState(): void {
+    const status = this.data.mcrStatus || '';
+    const activeStatuses = ['Active', 'Active_Late'];
+    const terminalStatuses = ['Complete', 'Partial_Complete', 'Cancelled', 'Failed', 'DNF'];
+
+    this.isTerminalMcrStatus = terminalStatuses.includes(status);
+    this.isReadOnly = this.data.readOnly || activeStatuses.includes(status) || this.isTerminalMcrStatus;
+
+    if (this.isReadOnly) {
       this.form.disable();
       this.subActionsControl.disable();
       this.backoutPlanControl.disable();
+      this.cdr.detectChanges();
     }
   }
 
@@ -430,7 +461,8 @@ export class EditTaskDialogComponent implements OnInit {
         data: {
           mcrId: this.data.mcrId,
           taskId: this.data.task.task_id,
-          taskTitle: this.data.task.title
+          taskTitle: this.data.task.title,
+          mcrStatus: this.data.mcrStatus
         }
       });
     });

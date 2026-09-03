@@ -5,6 +5,27 @@
   <mat-card-content>
     <form [formGroup]="mcrForm" class="mcr-form" (ngSubmit)="onSave()">
       <mat-form-field appearance="outline" class="form-field full-width">
+        <mat-label>Change Type</mat-label>
+        <mat-select formControlName="changeType">
+          @for (ct of changeTypes; track ct.type_id) {
+            <mat-option [value]="ct.type_name">{{ ct.type_name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (!editMcrId) {
+        <mat-form-field appearance="outline" class="form-field full-width">
+          <mat-label>Use Model (optional)</mat-label>
+          <mat-select [(value)]="selectedModelId">
+            <mat-option [value]="null">None</mat-option>
+            @for (model of filteredModels; track model.model_id) {
+              <mat-option [value]="model.model_id">{{ model.model_name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+
+      <mat-form-field appearance="outline" class="form-field full-width">
         <mat-label>MCR Number</mat-label>
         <input matInput formControlName="mcrNumber" placeholder="e.g. MCR-2025-001" />
         @if (mcrForm.get('mcrNumber')?.hasError('required') && mcrForm.get('mcrNumber')?.touched) {
@@ -61,16 +82,16 @@
         [users]="users"
         [departments]="departments"
         [teams]="teams"
+        [responsibleNames]="responsibleNames"
         (raciChange)="onRaciChange()">
       </app-raci-assignment>
-
-      @if (submitted && !raciValid) {
-        <p class="raci-error">At least one Responsible and one Accountable user must be assigned.</p>
-      }
 
       <div class="form-actions">
         <button mat-raised-button color="primary" type="submit">Save</button>
         <button mat-stroked-button type="button" (click)="onCancel()">Cancel</button>
+        @if (canCancelMCR) {
+          <button mat-raised-button color="warn" type="button" (click)="onCancelMCR()">Cancel MCR</button>
+        }
       </div>
     </form>
   </mat-card-content>

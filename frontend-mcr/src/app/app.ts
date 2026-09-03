@@ -15,5 +15,5 @@ import { UserSwitcherComponent } from './components/user-switcher/user-switcher.
   styleUrl: './app.scss'
 })
 export class App {
-  readonly title = 'MCR Manager';
+  readonly title = 'Change Manager';
 }

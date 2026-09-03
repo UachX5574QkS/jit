@@ -1,11 +1,11 @@
 CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
     /*
     ** PKG_MCR_TASKS (Body)
-    ** Task CRUD, dependency validation, task status management, and action
-    ** management for MCR Manager.
+    ** Task CRUD, dependency validation, task status management, action
+    ** management, and dependency cascade for MCR Manager.
     **
     ** Requirements 4.3, 4.4, 4.5, 5.3: Task operations with dependency
-    ** validation, sequential ordering, and action management.
+    ** validation, sequential ordering, action management, and cascade logic.
     */
 
     ----------------------------------------------------------------------------
@@ -615,17 +615,14 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
         END;
 
         -- 2. Check permission: Management Group, Owning Team, or Author
-        -- Check Management Group (Responsible or Accountable in RACI)
         IF pkg_mcr_core.is_management_group(p_user_id, l_mcr_id) THEN
             l_has_perm := TRUE;
         END IF;
 
-        -- Check if user is the task author
         IF NOT l_has_perm AND p_user_id = l_created_by THEN
             l_has_perm := TRUE;
         END IF;
 
-        -- Check if user is in the owning team (same department)
         IF NOT l_has_perm AND l_owner_dept_id IS NOT NULL THEN
             BEGIN
                 SELECT department_id
@@ -665,6 +662,70 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
             p_new_values  => '{"task_status":"' || p_new_status || '"}'
         );
     END change_task_status;
+
+    ----------------------------------------------------------------------------
+    -- cascade_cancel_deps
+    --
+    -- Handles dependency cascading when a task is Cancelled or Failed.
+    -- Finds all tasks that have a HARD dependency on p_task_id.
+    --   If p_convert_to_soft = TRUE: converts HARD deps to SOFT (Any Status)
+    --   If p_convert_to_soft = FALSE: sets affected tasks to Blocked_Dep status
+    ----------------------------------------------------------------------------
+    PROCEDURE cascade_cancel_deps(
+        p_task_id         IN NUMBER,
+        p_convert_to_soft IN BOOLEAN DEFAULT FALSE
+    ) IS
+        l_old_status   VARCHAR2(30);
+        l_acting_user  NUMBER;
+    BEGIN
+        -- Get the user who created/last modified the source task for audit trail
+        SELECT NVL(created_by_user_id, 0)
+          INTO l_acting_user
+          FROM tab_mcr_tasks
+         WHERE task_id = p_task_id;
+
+        IF p_convert_to_soft THEN
+            -- Convert all HARD dependencies on this task to SOFT
+            -- This means dependent tasks no longer require this task to succeed,
+            -- they just need it to reach any terminal state
+            UPDATE tab_mcr_dependencies
+               SET dependency_type = 'SOFT'
+             WHERE depends_on_task_id = p_task_id
+               AND dependency_type = 'HARD';
+        ELSE
+            -- Block all tasks that have a HARD dependency on this task
+            FOR rec IN (
+                SELECT DISTINCT d.task_id
+                  FROM tab_mcr_dependencies d
+                  JOIN tab_mcr_tasks t ON t.task_id = d.task_id
+                 WHERE d.depends_on_task_id = p_task_id
+                   AND d.dependency_type = 'HARD'
+                   AND t.task_status NOT IN ('Complete', 'Cancelled', 'Failed')
+            ) LOOP
+                -- Get current status before blocking
+                SELECT task_status
+                  INTO l_old_status
+                  FROM tab_mcr_tasks
+                 WHERE task_id = rec.task_id;
+
+                -- Set to Blocked_Dep (blocked due to failed/cancelled dependency)
+                UPDATE tab_mcr_tasks
+                   SET task_status = 'Blocked_Dep',
+                       updated_at  = SYSTIMESTAMP
+                 WHERE task_id = rec.task_id;
+
+                -- Audit the cascade-driven status change
+                pkg_mcr_audit.log_change(
+                    p_user_id     => l_acting_user,
+                    p_operation   => 'UPDATE',
+                    p_object_type => 'TASK',
+                    p_object_id   => rec.task_id,
+                    p_old_values  => '{"task_status":"' || l_old_status || '"}',
+                    p_new_values  => '{"task_status":"Blocked_Dep","cascade_source_task_id":' || p_task_id || '}'
+                );
+            END LOOP;
+        END IF;
+    END cascade_cancel_deps;
 
     ----------------------------------------------------------------------------
     -- get_dependency_map
@@ -711,7 +772,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
 
         APEX_JSON.close_array;
 
-        -- Edges array: each dependency as source→target with type
+        -- Edges array: each dependency as source->target with type
         APEX_JSON.open_array('edges');
 
         FOR rec IN (
@@ -879,7 +940,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
         DELETE FROM tab_mcr_actions
          WHERE action_id = p_action_id;
 
-        -- 3. Reorder remaining actions (decrement ordinal_position for actions after deleted)
+        -- 3. Reorder remaining actions
         UPDATE tab_mcr_actions
            SET ordinal_position = ordinal_position - 1
          WHERE task_id = l_task_id
@@ -923,7 +984,6 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
          WHERE task_id = p_task_id;
 
         -- 2. Check permission: Management Group or Owning Team
-        --    Get user's department
         SELECT department_id
           INTO l_user_dept_id
           FROM tab_idcs_users
@@ -956,7 +1016,7 @@ CREATE OR REPLACE PACKAGE BODY pkg_mcr_tasks AS
                    updated_at    = SYSTIMESTAMP
              WHERE action_id = l_action_id;
 
-            -- Audit log for each change, include comment in new_values if provided
+            -- Audit log for each change
             pkg_mcr_audit.log_change(
                 p_user_id     => p_user_id,
                 p_operation   => 'UPDATE',

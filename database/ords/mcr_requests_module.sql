@@ -177,16 +177,20 @@ BEGIN
     l_user_id := TO_NUMBER(:"X-User-Id");
     l_mcr_id  := TO_NUMBER(:id);
 
+    l_body := :body_text;
+    APEX_JSON.PARSE(l_body);
+
+    IF l_user_id IS NULL THEN
+        l_user_id := APEX_JSON.GET_NUMBER(p_path => 'user_id');
+    END IF;
+
     IF l_user_id IS NULL THEN
         OWA_UTIL.STATUS_LINE(401, 'Unauthorized');
         APEX_JSON.OPEN_OBJECT;
-        APEX_JSON.WRITE('error', 'X-User-Id header is required');
+        APEX_JSON.WRITE('error', 'X-User-Id header or user_id in body is required');
         APEX_JSON.CLOSE_OBJECT;
         RETURN;
     END IF;
-
-    l_body := :body_text;
-    APEX_JSON.PARSE(l_body);
 
     l_description := APEX_JSON.GET_VARCHAR2(p_path => 'description');
     l_start_date  := TO_DATE(APEX_JSON.GET_VARCHAR2(p_path => 'start_date'), 'YYYY-MM-DD');
@@ -220,7 +224,7 @@ EXCEPTION
         APEX_JSON.CLOSE_OBJECT;
 END;
 ]',
-        p_comments       => 'PUT handler - update MCR details'
+        p_comments       => 'PUT handler - update MCR details (reads user_id from header or body)'
     );
 
     ---------------------------------------------------------------------------

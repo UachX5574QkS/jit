@@ -316,6 +316,9 @@ END;
 
     -- PUT /mcr/v1/tasks/:task_id/status
     -- Changes the status of a task with permission validation
+    -- Supports optional cascade_action for Cancelled/Failed statuses:
+    --   'convert_to_soft' - converts hard deps to soft (Any Status)
+    --   'block' - blocks dependent tasks (default for Failed)
     ORDS.DEFINE_HANDLER(
         p_module_name    => 'mcr_tasks',
         p_pattern        => ':task_id/status',
@@ -323,9 +326,10 @@ END;
         p_source_type    => 'plsql/block',
         p_source         => q'[
 DECLARE
-    l_user_id    NUMBER;
-    l_body       CLOB;
-    l_new_status VARCHAR2(50);
+    l_user_id        NUMBER;
+    l_body           CLOB;
+    l_new_status     VARCHAR2(50);
+    l_cascade_action VARCHAR2(50);
 BEGIN
     l_user_id := :\"X-User-Id\";
 
@@ -344,13 +348,30 @@ BEGIN
     l_body := :body_text;
     APEX_JSON.PARSE(l_body);
 
-    l_new_status := APEX_JSON.GET_VARCHAR2(p_path => 'new_status');
+    l_new_status     := APEX_JSON.GET_VARCHAR2(p_path => 'new_status');
+    l_cascade_action := APEX_JSON.GET_VARCHAR2(p_path => 'cascade_action');
 
+    -- Change the task status
     PKG_MCR_TASKS.change_task_status(
         p_user_id    => l_user_id,
         p_task_id    => :task_id,
         p_new_status => l_new_status
     );
+
+    -- Handle dependency cascade for Cancelled or Failed statuses
+    IF l_new_status IN ('Cancelled', 'Failed') THEN
+        IF l_cascade_action = 'convert_to_soft' THEN
+            PKG_MCR_TASKS.cascade_cancel_deps(
+                p_task_id         => :task_id,
+                p_convert_to_soft => TRUE
+            );
+        ELSIF l_cascade_action = 'block' OR (l_new_status = 'Failed' AND l_cascade_action IS NULL) THEN
+            PKG_MCR_TASKS.cascade_cancel_deps(
+                p_task_id         => :task_id,
+                p_convert_to_soft => FALSE
+            );
+        END IF;
+    END IF;
 EXCEPTION
     WHEN PKG_MCR_TASKS.e_task_not_found THEN
         OWA_UTIL.STATUS_LINE(404, 'Not Found');
@@ -370,7 +391,7 @@ EXCEPTION
         APEX_JSON.CLOSE_OBJECT;
 END;
 ]',
-        p_comments       => 'PUT handler - changes task status with permission check'
+        p_comments       => 'PUT handler - changes task status with permission check and dependency cascade'
     );
 
     ---------------------------------------------------------------------------
