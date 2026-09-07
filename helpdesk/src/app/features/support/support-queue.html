@@ -1,0 +1,141 @@
+<div class="support-queue">
+  <h1 class="greeting">Support</h1>
+
+  <div class="card">
+    <!-- ── Filter bar: team drop-down · scope toggle · hide-complete · show-unassigned · search (R6.2–6.6) ── -->
+    <div class="filter-bar">
+      <!-- Team drop-down (R6.3) -->
+      <label class="team-select">
+        <span class="visually-hidden">Team</span>
+        <select
+          class="team-control"
+          aria-label="Team"
+          [value]="team() === 'all' ? 'all' : team()"
+          (change)="onTeamChange($any($event.target).value)"
+        >
+          @for (opt of teamOptions(); track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+
+      <!-- My Queue / Team Queue toggle (R6.4) -->
+      <div class="scope-toggle" role="group" aria-label="Queue scope">
+        <button
+          type="button"
+          class="scope-btn"
+          [class.is-active]="scope() === 'mine'"
+          [attr.aria-pressed]="scope() === 'mine'"
+          (click)="setScope('mine')"
+        >
+          My Queue
+        </button>
+        <button
+          type="button"
+          class="scope-btn"
+          [class.is-active]="scope() === 'team'"
+          [attr.aria-pressed]="scope() === 'team'"
+          (click)="setScope('team')"
+        >
+          Team Queue
+        </button>
+      </div>
+
+      <!-- Hide Complete (R6.5) -->
+      <label class="check-toggle">
+        <input type="checkbox" [checked]="hideComplete()" (change)="toggleHideComplete()" />
+        <span>Hide Complete</span>
+      </label>
+
+      <!-- Show Unassigned (R6.6) -->
+      <label class="check-toggle">
+        <input type="checkbox" [checked]="showUnassigned()" (change)="toggleShowUnassigned()" />
+        <span>Show Unassigned</span>
+      </label>
+
+      <!-- Search pill (R6.2) -->
+      <div class="search-pill">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search queue…"
+          aria-label="Search queue"
+          [value]="search()"
+          (input)="onSearchInput($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (error()) {
+      <p class="list-error" role="alert">{{ error() }}</p>
+    }
+
+    @if (loading() && rows().length === 0) {
+      <p class="list-note">Loading queue…</p>
+    } @else if (isEmpty()) {
+      <p class="list-note">No requests match the current filters.</p>
+    } @else {
+      <!-- ── Queue table (same columns as the Requests screen, R6.7) ── -->
+      <div class="table-scroll">
+        <table class="requests-table">
+          <thead>
+            <tr>
+              <th scope="col">Task Number</th>
+              <th scope="col">Jira</th>
+              <th scope="col">Title</th>
+              <th scope="col">Date Raised</th>
+              <th scope="col">Status</th>
+              <th scope="col">Support Team</th>
+              <th scope="col">Assigned To</th>
+              <th scope="col">Last Updated</th>
+              <th scope="col">Est. Start</th>
+              <th scope="col">Actual Start</th>
+              <th scope="col">Est. Effort</th>
+              <th scope="col"><span class="visually-hidden">Updated</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track trackById($index, row)) {
+              <tr class="request-row" (click)="openRequest(row)">
+                <td class="cell-ref">
+                  <a
+                    class="ref-link"
+                    [routerLink]="['/support', row.id]"
+                    (click)="$event.stopPropagation()"
+                  >{{ row.taskReference }}</a>
+                </td>
+                <td>{{ row.jiraNumber || '—' }}</td>
+                <td class="cell-title">{{ row.title }}</td>
+                <td>{{ row.dateRaised | localDate }}</td>
+                <td>
+                  <span
+                    class="status-pill"
+                    [class.is-closed]="isClosed(row)"
+                    [class.is-working]="row.hasOpenTimer && !isClosed(row)"
+                  >{{ displayStatus(row) }}</span>
+                </td>
+                <td>{{ row.teamTitle }}</td>
+                <td>{{ row.assignedMemberName || '—' }}</td>
+                <td>{{ row.lastUpdated | localDate:'datetime' }}</td>
+                <td>{{ row.estimatedStartDate | localDate:'date':'—' }}</td>
+                <td>{{ row.actualStartDate | localDate:'date':'—' }}</td>
+                <td>{{ effortLabel(row) }}</td>
+                <td class="cell-updated">
+                  @if (row.updatedSinceLastSeen) {
+                    <span class="updated-pill" title="Changed since you last viewed it">Updated</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

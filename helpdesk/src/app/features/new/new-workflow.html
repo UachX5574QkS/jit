@@ -1,0 +1,227 @@
+<div class="new-workflow">
+  <div class="card">
+    <h1 class="card-heading workflow-title">Raise a New Request</h1>
+
+    <!-- ── Horizontal step row (UI spec: "Workflow Steps (Horizontal)") ── -->
+    <ol class="step-row" role="list" aria-label="Workflow steps">
+      @for (node of steps(); track node.number; let last = $last) {
+        <li class="step-item" role="listitem">
+          <div
+            class="step-node"
+            [class.is-completed]="node.state === 'completed'"
+            [class.is-running]="node.state === 'running'"
+            [class.is-locked]="node.state === 'locked'"
+            [attr.aria-current]="node.state === 'running' ? 'step' : null"
+          >
+            <span class="step-badge" aria-hidden="true">{{ node.number }}</span>
+            <span class="step-icon" aria-hidden="true">
+              @switch (node.icon) {
+                @case ('team') {
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                }
+                @case ('details') {
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
+                    <path d="M9 13h6M9 17h6" />
+                  </svg>
+                }
+                @case ('review') {
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                }
+              }
+            </span>
+          </div>
+          <span class="step-label">{{ node.label }}</span>
+          @if (!last) {
+            <span class="step-connector" aria-hidden="true"></span>
+          }
+        </li>
+      }
+    </ol>
+
+    @if (error()) {
+      <p class="workflow-error" role="alert">{{ error() }}</p>
+    }
+
+    <!-- ── Step 1: Team and Task (R2.3–2.4) ── -->
+    @if (step() === 1) {
+      <section class="step-panel" aria-labelledby="step1-heading">
+        <h2 id="step1-heading" class="step-heading">Choose a team and task</h2>
+
+        <div class="form-row">
+          <label class="field-label" for="team-select">Support Team</label>
+          <select
+            id="team-select"
+            class="field-control"
+            [value]="selectedTeamId() ?? ''"
+            (change)="onTeamChange($any($event.target).value)"
+          >
+            <option value="">Select a team…</option>
+            @for (team of teams(); track team.id) {
+              <option [value]="team.id">{{ team.title }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label class="field-label" for="task-select">Task</label>
+          <select
+            id="task-select"
+            class="field-control"
+            [value]="selectedTaskId() ?? ''"
+            [disabled]="selectedTeamId() === null || loadingTasks()"
+            (change)="onTaskChange($any($event.target).value)"
+          >
+            <option value="">
+              {{ loadingTasks() ? 'Loading tasks…' : 'Select a task…' }}
+            </option>
+            @for (task of tasks(); track task.id) {
+              <option [value]="task.id">{{ task.name }}</option>
+            }
+          </select>
+        </div>
+      </section>
+    }
+
+    <!-- ── Step 2: Request Details (R2.5–2.10, R3) ── -->
+    @if (step() === 2) {
+      <section class="step-panel" aria-labelledby="step2-heading">
+        <h2 id="step2-heading" class="step-heading">
+          {{ version()?.taskName }} — request details
+        </h2>
+
+        @if (loadingVersion()) {
+          <p class="workflow-note">Loading the task fields…</p>
+        } @else if (form(); as f) {
+          <form [formGroup]="f" novalidate>
+            <!-- Title (required) -->
+            <div class="form-row">
+              <label class="field-label" for="request-title">
+                Title <span class="field-required" aria-hidden="true">*</span>
+                <span class="visually-hidden">(required)</span>
+              </label>
+              <input
+                id="request-title"
+                class="field-control"
+                type="text"
+                formControlName="title"
+                placeholder="Short summary of your request"
+              />
+            </div>
+
+            <!-- Task-defined typed fields (shared form-field components) -->
+            @for (field of fields(); track field.id) {
+              <app-form-field
+                [field]="field"
+                [errorMessage]="fieldError(field)"
+                [formControlName]="$any(field.id)"
+              />
+            }
+
+            <!-- Always-present optional Jira field (R2.8) -->
+            <div class="form-row">
+              <label class="field-label" for="request-jira">Jira</label>
+              <input
+                id="request-jira"
+                class="field-control"
+                type="text"
+                formControlName="jira"
+                placeholder="Related Jira number (optional)"
+              />
+            </div>
+          </form>
+        }
+      </section>
+    }
+
+    <!-- ── Step 3: Review (R2.11–2.13) ── -->
+    @if (step() === 3) {
+      <section class="step-panel" aria-labelledby="step3-heading">
+        <h2 id="step3-heading" class="step-heading">Review your request</h2>
+
+        @if (loadingSummary()) {
+          <p class="workflow-note">Generating a summary…</p>
+        } @else if (summary(); as s) {
+          @if (s.available) {
+            <!-- Ollama summary, read-only (R2.11) -->
+            <div class="review-summary" role="note">
+              <h3 class="review-subheading">Summary</h3>
+              <p class="review-summary-text">{{ s.summary }}</p>
+            </div>
+          } @else {
+            <!-- Fallback: show the entered values (R2.12) -->
+            <div class="review-fallback">
+              <p class="workflow-note">
+                A generated summary is not available right now. Here are the details you entered —
+                you can still submit.
+              </p>
+              <dl class="review-values">
+                @for (v of s.values; track v.taskFieldId) {
+                  <div class="review-value-row">
+                    <dt>{{ v.name }}</dt>
+                    <dd>{{ v.value || '—' }}</dd>
+                  </div>
+                }
+              </dl>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    <!-- ── Actions (Cancel / Previous / Next / Submit) ── -->
+    <div class="workflow-actions">
+      <button type="button" class="btn btn-ghost" (click)="cancel()">Cancel</button>
+
+      <div class="workflow-actions-right">
+        @if (step() > 1) {
+          <button type="button" class="btn btn-ghost" (click)="previous()">Previous</button>
+        }
+
+        @if (step() === 1) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canLeaveStep1() || loadingVersion()"
+            (click)="next()"
+          >
+            Next
+          </button>
+        } @else if (step() === 2) {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canLeaveStep2() || loadingSummary()"
+            (click)="next()"
+          >
+            Next
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="submitting() || loadingSummary()"
+            (click)="submit()"
+          >
+            {{ submitting() ? 'Submitting…' : 'Submit' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,303 @@
+:host {
+  display: block;
+}
+
+.data-point-admin {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 4px 0 20px;
+}
+
+/* -------------------------------------------------------------------------
+   Breadcrumb
+   ------------------------------------------------------------------------- */
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.crumb-link {
+  color: var(--color-nw-purple);
+  text-decoration: none;
+}
+
+.crumb-link:hover {
+  text-decoration: underline;
+}
+
+.crumb-sep {
+  color: var(--ink-3);
+}
+
+.crumb-current {
+  color: var(--ink-2);
+}
+
+/* -------------------------------------------------------------------------
+   Create form
+   ------------------------------------------------------------------------- */
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple);
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.req {
+  color: var(--color-red);
+}
+
+.field-control {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.18);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-nw-purple);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  min-height: 24px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-nw-purple-l);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: var(--ink-3);
+  cursor: not-allowed;
+}
+
+/* -------------------------------------------------------------------------
+   Notes / errors
+   ------------------------------------------------------------------------- */
+.admin-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.admin-error,
+.form-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   Data points table
+   ------------------------------------------------------------------------- */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.col-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.point-name {
+  font-weight: 600;
+}
+
+.point-desc {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.col-shape {
+  max-width: 280px;
+}
+
+.shape-list {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.shape-pattern {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--bg-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.shape-none {
+  color: var(--ink-3);
+}
+
+.state-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-green);
+  background: rgba(35, 166, 86, 0.12);
+}
+
+.state-pill.is-retired {
+  color: var(--ink-2);
+  background: var(--bg-muted);
+}
+
+.is-retired-row td {
+  color: var(--ink-2);
+}
+
+.col-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.btn-ghost {
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 16px;
+  min-height: 24px;
+  cursor: pointer;
+  color: var(--color-nw-purple);
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-nw-purple);
+}
+
+.btn-danger {
+  color: var(--color-red);
+}
+
+.btn-danger:hover {
+  border-color: var(--color-red);
+}
+
+.row-message-row td {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.row-message {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary {
+    transition: none;
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: none;
+  }
+}

@@ -1,0 +1,430 @@
+:host {
+  display: block;
+}
+
+.task-admin {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 4px 0 20px;
+}
+
+/* -------------------------------------------------------------------------
+   Breadcrumb
+   ------------------------------------------------------------------------- */
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.crumb-link {
+  color: var(--color-nw-purple);
+  text-decoration: none;
+}
+
+.crumb-link:hover {
+  text-decoration: underline;
+}
+
+.crumb-sep {
+  color: var(--ink-3);
+}
+
+.crumb-current {
+  color: var(--ink-2);
+}
+
+.card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.card-head-row .card-heading {
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Forms
+   ------------------------------------------------------------------------- */
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple);
+}
+
+.sub-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.req {
+  color: var(--color-red);
+}
+
+.field-control {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.18);
+}
+
+.team-select {
+  max-width: 380px;
+}
+
+.version-note {
+  margin: 0 0 12px;
+}
+
+/* -------------------------------------------------------------------------
+   Fields block
+   ------------------------------------------------------------------------- */
+.fields-block {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  margin: 0;
+}
+
+.fields-block legend {
+  padding: 0 6px;
+}
+
+.field-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--bg-muted);
+}
+
+.field-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.field-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.field-order {
+  font-weight: 700;
+  color: var(--color-nw-purple);
+}
+
+.field-name {
+  font-weight: 600;
+}
+
+.field-type {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--color-nw-purple);
+  background: var(--color-nw-purple-bg);
+}
+
+.field-type.pending {
+  color: var(--ink-3);
+  background: var(--bg-muted);
+  border: 1px dashed var(--line);
+}
+
+.field-dp {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.field-move {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.btn-icon {
+  font: inherit;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.btn-icon:hover:not(:disabled) {
+  border-color: var(--color-nw-purple);
+  color: var(--color-nw-purple);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-icon.btn-remove:hover:not(:disabled) {
+  border-color: var(--color-red);
+  color: var(--color-red);
+}
+
+.field-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.sub-field {
+  gap: 4px;
+}
+
+.add-field-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.add-field {
+  flex: 1 1 auto;
+  max-width: 260px;
+  gap: 4px;
+}
+
+/* -------------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------------- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-nw-purple);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  min-height: 24px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-nw-purple-l);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 16px;
+  min-height: 24px;
+  cursor: pointer;
+  color: var(--color-nw-purple);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--color-nw-purple);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  color: var(--color-red);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: var(--color-red);
+}
+
+/* -------------------------------------------------------------------------
+   Notes / messages
+   ------------------------------------------------------------------------- */
+.admin-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.admin-error,
+.form-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+.form-success {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-green);
+  background: rgba(35, 166, 86, 0.1);
+  border-left: 3px solid var(--color-green);
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   Tasks table
+   ------------------------------------------------------------------------- */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.col-name {
+  font-weight: 600;
+}
+
+.col-actions {
+  text-align: right;
+  white-space: nowrap;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.row-message-row td {
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.row-message {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+/* Screen-reader-only utility. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .add-field-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .add-field {
+    max-width: none;
+  }
+  .col-actions {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary {
+    transition: none;
+  }
+  .btn-primary:hover:not(:disabled) {
+    transform: none;
+  }
+}

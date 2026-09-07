@@ -1,0 +1,193 @@
+<div class="data-point-admin">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a class="crumb-link" routerLink="/administer">Administer</a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <span class="crumb-current">Data Points</span>
+  </nav>
+
+  <h1 class="greeting">Data Points</h1>
+
+  <!-- ── Create a data point (R14.2) ── -->
+  <div class="card">
+    <h2 class="card-heading">Create a data point</h2>
+
+    <form class="create-form" (ngSubmit)="createDataPoint()">
+      <div class="form-row">
+        <label class="field">
+          <span class="field-label">Name <span class="req" aria-hidden="true">*</span></span>
+          <input
+            type="text"
+            class="field-control"
+            name="name"
+            [ngModel]="newName()"
+            (ngModelChange)="newName.set($event)"
+            placeholder="e.g. Cost Centre"
+            aria-label="Data point name"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Data type <span class="req" aria-hidden="true">*</span></span>
+          <select
+            class="field-control"
+            name="dataType"
+            [ngModel]="newDataType()"
+            (ngModelChange)="newDataType.set($event)"
+            aria-label="Data type"
+          >
+            @for (opt of dataTypeOptions; track opt.value) {
+              <option [ngValue]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Description</span>
+        <input
+          type="text"
+          class="field-control"
+          name="description"
+          [ngModel]="newDescription()"
+          (ngModelChange)="newDescription.set($event)"
+          placeholder="Optional"
+          aria-label="Description"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Default help text</span>
+        <textarea
+          class="field-control"
+          name="helpText"
+          rows="2"
+          [ngModel]="newHelpText()"
+          (ngModelChange)="newHelpText.set($event)"
+          placeholder="Optional guidance shown behind the “?” affordance"
+          aria-label="Default help text"
+        ></textarea>
+      </label>
+
+      <!-- Type-specific: DROPDOWN options (R14.2, R3.5) -->
+      @if (needsOptions()) {
+        <label class="field">
+          <span class="field-label">Options <span class="req" aria-hidden="true">*</span></span>
+          <textarea
+            class="field-control"
+            name="options"
+            rows="4"
+            [ngModel]="newOptionsRaw()"
+            (ngModelChange)="newOptionsRaw.set($event)"
+            placeholder="One option per line"
+            aria-label="Dropdown options, one per line"
+          ></textarea>
+          <span class="field-hint">Enter one option per line.</span>
+        </label>
+      }
+
+      <!-- Type-specific: REGEXP pattern (R14.2, R3.4) -->
+      @if (needsPattern()) {
+        <label class="field">
+          <span class="field-label">Pattern <span class="req" aria-hidden="true">*</span></span>
+          <input
+            type="text"
+            class="field-control"
+            name="pattern"
+            [ngModel]="newPattern()"
+            (ngModelChange)="newPattern.set($event)"
+            placeholder="e.g. ^[A-Z]{2}\d{4}$"
+            aria-label="Regular expression pattern"
+          />
+          <span class="field-hint">A valid regular expression the value must match.</span>
+        </label>
+      }
+
+      @if (createError()) {
+        <p class="form-error" role="alert">{{ createError() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="!canCreate()">
+          {{ creating() ? 'Creating…' : 'Create data point' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Data points table (R14.1) ── -->
+  <div class="card">
+    <h2 class="card-heading">Existing data points</h2>
+
+    @if (error()) {
+      <p class="admin-error" role="alert">{{ error() }}</p>
+    }
+
+    @if (loading() && points().length === 0) {
+      <p class="admin-note">Loading data points…</p>
+    } @else if (isEmpty()) {
+      <p class="admin-note">No data points exist yet. Create the first one above.</p>
+    } @else {
+      <div class="table-scroll">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Type</th>
+              <th scope="col">Options / Pattern</th>
+              <th scope="col">State</th>
+              <th scope="col">Created</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of points(); track trackByPointId($index, point)) {
+              <tr class="point-row" [class.is-retired-row]="point.isRetired">
+                <td class="col-name">
+                  <span class="point-name">{{ point.name }}</span>
+                  @if (point.description) {
+                    <span class="point-desc">{{ point.description }}</span>
+                  }
+                </td>
+                <td>{{ typeLabel(point.dataType) }}</td>
+                <td class="col-shape">
+                  @if (point.dataType === 'DROPDOWN' && point.defaultOptions?.length) {
+                    <span class="shape-list">{{ point.defaultOptions?.join(', ') }}</span>
+                  } @else if (point.dataType === 'REGEXP' && point.regexpPattern) {
+                    <code class="shape-pattern">{{ point.regexpPattern }}</code>
+                  } @else {
+                    <span class="shape-none">—</span>
+                  }
+                </td>
+                <td class="col-state">
+                  <span class="state-pill" [class.is-retired]="point.isRetired">
+                    {{ point.isRetired ? 'Retired' : 'Active' }}
+                  </span>
+                </td>
+                <td>{{ point.createdAt | localDate }}</td>
+                <td class="col-actions">
+                  @if (!point.isRetired) {
+                    <button
+                      type="button"
+                      class="btn-ghost btn-danger"
+                      (click)="retireDataPoint(point)"
+                    >
+                      Retire
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (rowMessage(point)) {
+                <tr class="row-message-row">
+                  <td colspan="6">
+                    <p class="row-message" role="alert">{{ rowMessage(point) }}</p>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

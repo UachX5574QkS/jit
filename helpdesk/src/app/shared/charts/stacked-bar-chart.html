@@ -1,0 +1,42 @@
+<figure class="chart stacked-bar-chart">
+  @if (heading()) {
+    <figcaption class="chart-heading">{{ heading() }}</figcaption>
+  }
+
+  @if (hasData()) {
+    <!-- Legend: series label → colour -->
+    @if (legend().length) {
+      <ul class="chart-legend" aria-label="Legend">
+        @for (entry of legend(); track entry.label) {
+          <li class="legend-item">
+            <span class="legend-swatch" [style.background]="entry.color" aria-hidden="true"></span>
+            <span class="legend-label">{{ entry.label }}</span>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- One .bar-row per category: label → track (stacked) → value -->
+    <div class="bars" role="list">
+      @for (bar of renderedBars(); track bar.label) {
+        <div class="bar-row" role="listitem">
+          <span class="bar-label" [title]="bar.label">{{ bar.label }}</span>
+          <span class="bar-track">
+            @for (seg of bar.segments; track seg.label) {
+              <span
+                class="bar-segment"
+                [style.width.%]="seg.widthPct"
+                [style.background]="seg.color"
+                [attr.title]="seg.label + ': ' + seg.value"
+                aria-hidden="true"
+              ></span>
+            }
+          </span>
+          <span class="bar-value">{{ bar.total }}</span>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="chart-empty">No data to display.</p>
+  }
+</figure>

@@ -1,0 +1,163 @@
+<div class="team-membership">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a class="crumb-link" routerLink="/administer">Administer</a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <span class="crumb-current">Team Membership</span>
+  </nav>
+
+  <h1 class="greeting">Team Membership</h1>
+
+  <!-- ── Pick a team you lead (R15.1) ── -->
+  <div class="card">
+    <h2 class="card-heading">Choose a team</h2>
+
+    @if (ledTeamIds().length === 0) {
+      <p class="admin-note">You do not lead any teams.</p>
+    } @else {
+      <label class="field">
+        <span class="field-label">Team you lead</span>
+        <select
+          class="field-control team-select"
+          aria-label="Team to manage"
+          [value]="selectedTeamId() ?? ''"
+          (change)="onSelectTeam($any($event.target).value)"
+        >
+          <option value="" disabled [selected]="selectedTeamId() === null">Select a team…</option>
+          @for (id of ledTeamIds(); track id) {
+            <option [value]="id" [selected]="selectedTeamId() === id">{{ teamLabel(id) }}</option>
+          }
+        </select>
+      </label>
+    }
+  </div>
+
+  @if (hasSelection()) {
+    @if (error()) {
+      <div class="card">
+        <p class="admin-error" role="alert">{{ error() }}</p>
+      </div>
+    } @else if (loading() && !team()) {
+      <div class="card">
+        <p class="admin-note">Loading team…</p>
+      </div>
+    } @else if (team(); as loaded) {
+      <!-- ── Team details (R15.2) ── -->
+      <div class="card">
+        <h2 class="card-heading">Team details</h2>
+
+        <form class="details-form" (ngSubmit)="saveDetails()">
+          <label class="field">
+            <span class="field-label">Title <span class="req" aria-hidden="true">*</span></span>
+            <input
+              type="text"
+              class="field-control"
+              name="title"
+              [ngModel]="editTitle()"
+              (ngModelChange)="editTitle.set($event); detailsSaved.set(false)"
+              aria-label="Team title"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span class="field-label">Description</span>
+            <input
+              type="text"
+              class="field-control"
+              name="description"
+              [ngModel]="editDescription()"
+              (ngModelChange)="editDescription.set($event); detailsSaved.set(false)"
+              placeholder="Optional"
+              aria-label="Team description"
+            />
+          </label>
+
+          @if (detailsError()) {
+            <p class="form-error" role="alert">{{ detailsError() }}</p>
+          }
+          @if (detailsSaved()) {
+            <p class="form-success" role="status">Team details saved.</p>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="!canSaveDetails()">
+              {{ savingDetails() ? 'Saving…' : 'Save details' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Membership (R15.3, R15.4) ── -->
+      <div class="card">
+        <h2 class="card-heading">Members</h2>
+
+        <form class="add-form" (ngSubmit)="addMember()">
+          <label class="field add-field">
+            <span class="field-label">Add a member by user ID</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              class="field-control"
+              name="addUserId"
+              [ngModel]="addUserId()"
+              (ngModelChange)="addUserId.set($event); addError.set(null)"
+              placeholder="e.g. 42"
+              aria-label="User ID to add"
+              inputmode="numeric"
+            />
+          </label>
+          <button type="submit" class="btn-primary" [disabled]="!canAddMember()">
+            {{ addingMember() ? 'Adding…' : 'Add member' }}
+          </button>
+        </form>
+
+        @if (addError()) {
+          <p class="form-error" role="alert">{{ addError() }}</p>
+        }
+
+        @if (loaded.members.length === 0) {
+          <p class="admin-note">This team has no members yet.</p>
+        } @else {
+          <div class="table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">Member</th>
+                  <th scope="col">Username</th>
+                  <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (member of loaded.members; track trackByUserId($index, member)) {
+                  <tr class="member-row">
+                    <td class="col-name">{{ member.displayName }}</td>
+                    <td class="col-username">{{ member.username }}</td>
+                    <td class="col-actions">
+                      <button
+                        type="button"
+                        class="btn-ghost btn-danger"
+                        (click)="removeMember(member)"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                  @if (memberMessage(member)) {
+                    <tr class="row-message-row">
+                      <td colspan="3">
+                        <p class="row-message" role="alert">{{ memberMessage(member) }}</p>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <p class="meta-note">Last updated {{ loaded.team.updatedAt | localDate }}</p>
+      </div>
+    }
+  }
+</div>

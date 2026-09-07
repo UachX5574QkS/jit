@@ -1,0 +1,34 @@
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <!-- Mobile sidebar toggle -->
+  <button
+    type="button"
+    class="sidebar-toggle"
+    (click)="toggleSidebar()"
+    [attr.aria-expanded]="sidebarOpen()"
+    aria-controls="app-sidebar-region"
+    aria-label="Toggle navigation"
+  >
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+  </button>
+
+  <div id="app-sidebar-region" class="sidebar-region">
+    <app-sidebar />
+  </div>
+
+  <!-- Scrim shown behind the open mobile sidebar -->
+  @if (sidebarOpen()) {
+    <div class="scrim" (click)="closeSidebar()" aria-hidden="true"></div>
+  }
+
+  <div class="app-content">
+    <app-header />
+    <main class="content-area" id="main-content">
+      <div class="content-inner">
+        <router-outlet />
+      </div>
+      <app-footer />
+    </main>
+  </div>
+</div>

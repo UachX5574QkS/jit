@@ -1,0 +1,111 @@
+:host {
+  display: block;
+}
+
+/* Full-viewport centred canvas — no shell chrome before authentication. */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  /* .card already supplies background/border/radius/padding/shadow; the login
+     card just constrains the width and animates in. */
+  animation: fadeIn 0.35s ease;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--color-nw-purple);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.login-heading {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.login-subtitle {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  margin-bottom: 6px;
+}
+
+.field-control {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.25);
+}
+
+.field-control:disabled {
+  background: var(--bg-muted);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+.login-submit {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card {
+    animation: none;
+  }
+}

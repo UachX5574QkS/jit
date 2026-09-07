@@ -1,0 +1,13 @@
+<nav class="stats-nav" aria-label="Statistics views">
+  @for (tab of tabs(); track tab.path) {
+    <a
+      class="stats-tab"
+      [routerLink]="tab.path"
+      routerLinkActive="active"
+      #rla="routerLinkActive"
+      [attr.aria-current]="rla.isActive ? 'page' : null"
+    >
+      {{ tab.label }}
+    </a>
+  }
+</nav>

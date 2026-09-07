@@ -1,0 +1,305 @@
+:host {
+  display: block;
+}
+
+.new-workflow {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.workflow-title {
+  margin: 0 0 20px;
+}
+
+/* -------------------------------------------------------------------------
+   Horizontal step row (UI spec: "Workflow Steps (Horizontal)")
+   ------------------------------------------------------------------------- */
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Icon card: 44x44 rounded, number badge top-right. */
+.step-node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 2px solid var(--line);
+  color: var(--ink-3);
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.step-icon {
+  display: inline-flex;
+}
+
+/* Step number badge — top-right corner of the node. */
+.step-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  background: var(--color-ink-3);
+  border-radius: 9px;
+}
+
+.step-label {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+  max-width: 96px;
+}
+
+/* Connector: 24px horizontal line between step nodes. */
+.step-connector {
+  position: absolute;
+  top: 21px; /* vertically centred on the 44px node */
+  left: calc(50% + 22px);
+  width: 24px;
+  height: 2px;
+  background: var(--line);
+}
+
+/* Completed: green border on the icon card + green number badge. */
+.step-node.is-completed {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.step-node.is-completed .step-badge {
+  background: var(--color-green);
+}
+
+/* Running: purple with a pulse animation. */
+.step-node.is-running {
+  border-color: var(--color-nw-purple);
+  color: var(--color-nw-purple);
+  animation: stepPulse 1.6s ease-in-out infinite;
+}
+
+.step-node.is-running .step-badge {
+  background: var(--color-nw-purple);
+}
+
+/* Locked (future): greyed out + grayscale, locked cursor. */
+.step-node.is-locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+@keyframes stepPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(90, 40, 125, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(90, 40, 125, 0);
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Step panels / forms
+   ------------------------------------------------------------------------- */
+.step-panel {
+  animation: fadeIn 0.35s ease;
+}
+
+.step-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.form-row {
+  margin-bottom: 16px;
+}
+
+.field-control {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.25);
+}
+
+.field-control:disabled {
+  background: var(--bg-muted);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+.field-required {
+  color: var(--color-red);
+  margin-left: 2px;
+}
+
+.workflow-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0 0 16px;
+}
+
+.workflow-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   Step 3 review
+   ------------------------------------------------------------------------- */
+.review-subheading {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple);
+  margin: 0 0 8px;
+}
+
+.review-summary-text {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--color-nw-purple-bg);
+  border-left: 3px solid var(--color-nw-purple);
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+
+.review-values {
+  margin: 12px 0 0;
+}
+
+.review-value-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-value-row dt {
+  flex: 0 0 180px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple);
+  margin: 0;
+}
+
+.review-value-row dd {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+/* -------------------------------------------------------------------------
+   Actions
+   ------------------------------------------------------------------------- */
+.workflow-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.workflow-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-nw-purple);
+  border: 1px solid var(--line);
+  padding: 12px 24px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-nw-purple-bg);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Responsive: single-column, connectors still flow horizontally with scroll. */
+@media (max-width: 900px) {
+  .review-value-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .review-value-row dt {
+    flex: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-node.is-running {
+    animation: none;
+  }
+  .step-panel {
+    animation: none;
+  }
+}

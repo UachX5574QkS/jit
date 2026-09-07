@@ -1,0 +1,66 @@
+<div class="login-page">
+  <div class="login-card card" role="region" aria-labelledby="login-heading">
+    <div class="login-brand">
+      <span class="brand-mark" aria-hidden="true">H</span>
+      <span class="brand-name">Helpdesk</span>
+    </div>
+
+    <h1 id="login-heading" class="login-heading">Sign in</h1>
+    <p class="login-subtitle">Enter your credentials to continue.</p>
+
+    <form (ngSubmit)="submit()" novalidate>
+      <!-- Username: dev drop-down (R1.2) when the directory is available,
+           otherwise a plain text field. -->
+      <div class="form-row">
+        <label class="field-label" [attr.for]="'login-username'">Username</label>
+        @if (hasDirectory()) {
+          <select
+            id="login-username"
+            class="field-control"
+            [value]="username()"
+            (change)="onUsernameChange($any($event.target).value)"
+            [disabled]="submitting()"
+            aria-label="Select a user to log in as"
+          >
+            <option value="" disabled>Select a user…</option>
+            @for (person of directory(); track person.username) {
+              <option [value]="person.username">{{ person.label }}</option>
+            }
+          </select>
+        } @else {
+          <input
+            id="login-username"
+            class="field-control"
+            type="text"
+            autocomplete="username"
+            [value]="username()"
+            (input)="onUsernameChange($any($event.target).value)"
+            [disabled]="submitting()"
+          />
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="form-row">
+        <label class="field-label" [attr.for]="'login-password'">Password</label>
+        <input
+          id="login-password"
+          class="field-control"
+          type="password"
+          autocomplete="current-password"
+          [value]="password()"
+          (input)="onPasswordChange($any($event.target).value)"
+          [disabled]="submitting()"
+        />
+      </div>
+
+      @if (error()) {
+        <p class="login-error" role="alert">{{ error() }}</p>
+      }
+
+      <button type="submit" class="btn btn-primary login-submit" [disabled]="!canSubmit()">
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+  </div>
+</div>

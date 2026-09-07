@@ -1,0 +1,39 @@
+<figure class="chart pie-chart">
+  @if (heading()) {
+    <figcaption class="chart-heading">{{ heading() }}</figcaption>
+  }
+
+  @if (hasData()) {
+    <div class="pie-body">
+      <svg
+        class="pie-svg"
+        [attr.viewBox]="'0 0 ' + size + ' ' + size"
+        [attr.width]="size"
+        [attr.height]="size"
+        role="img"
+        aria-label="Pie chart"
+      >
+        @for (seg of segments(); track seg.label) {
+          <path
+            class="pie-slice"
+            [attr.d]="seg.path"
+            [attr.fill]="seg.color"
+          >
+            <title>{{ seg.legend }}</title>
+          </path>
+        }
+      </svg>
+
+      <ul class="chart-legend" aria-label="Legend">
+        @for (seg of segments(); track seg.label) {
+          <li class="legend-item">
+            <span class="legend-swatch" [style.background]="seg.color" aria-hidden="true"></span>
+            <span class="legend-label">{{ seg.legend }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  } @else {
+    <p class="chart-empty">No data to display.</p>
+  }
+</figure>

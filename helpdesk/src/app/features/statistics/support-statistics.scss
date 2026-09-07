@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+.support-statistics {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 0 0 20px;
+}
+
+/* Section/card heading (UI spec: 16px, weight 700). */
+.card-heading {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* -------------------------------------------------------------------------
+   Team selector (R12.1) — a labelled drop-down in the UI-spec form style.
+   ------------------------------------------------------------------------- */
+.team-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple, #5a287d);
+}
+
+.team-select {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--color-card, #fff);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.team-select:focus {
+  outline: none;
+  border-color: var(--color-nw-purple, #5a287d);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-select {
+    transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Notes / errors
+   ------------------------------------------------------------------------- */
+.stats-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.stats-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   Matrix tables (R12.3, R12.4) — dense rows (tasks) × columns (members).
+   Horizontal scroll keeps a wide member set usable on narrow viewports.
+   ------------------------------------------------------------------------- */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.matrix-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.matrix-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Row-header cell (the task / "Team - Task" label). */
+.matrix-table th.col-row,
+.matrix-table td.col-row {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+  position: sticky;
+  left: 0;
+  background: var(--color-card, #fff);
+}
+
+.matrix-table thead th.col-row {
+  color: var(--ink-3);
+}
+
+/* Numeric / duration cells align right. */
+.matrix-table .col-num,
+.matrix-table .col-dur {
+  text-align: right;
+}
+
+.matrix-table th.col-num,
+.matrix-table th.col-dur {
+  text-align: right;
+}

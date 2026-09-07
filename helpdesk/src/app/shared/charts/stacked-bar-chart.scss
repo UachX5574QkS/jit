@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+.chart {
+  margin: 0;
+}
+
+.chart-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* UI spec "Bar Charts": .bar-row = label (120–180px) → track (flex) → value. */
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-label {
+  flex: 0 0 140px;
+  width: 140px;
+  font-size: 12px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Track: 8px height, muted background, 4px radius. */
+.bar-track {
+  display: flex;
+  flex: 1 1 auto;
+  height: 8px;
+  background: var(--bg-muted);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.bar-segment:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.bar-segment:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Value: 11px bold, right-aligned. */
+.bar-value {
+  flex: 0 0 auto;
+  min-width: 28px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.chart-empty {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .bar-label {
+    flex-basis: 96px;
+    width: 96px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-segment {
+    transition: none;
+  }
+}

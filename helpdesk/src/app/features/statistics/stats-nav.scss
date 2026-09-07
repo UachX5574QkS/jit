@@ -1,0 +1,44 @@
+:host {
+  display: block;
+}
+
+/* -------------------------------------------------------------------------
+   Statistics sub-navigation tab strip. Sits above the dashboard cards,
+   below the greeting. Purple active underline in the ui-foundations style.
+   ------------------------------------------------------------------------- */
+.stats-nav {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 20px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.stats-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.stats-tab:hover {
+  color: var(--color-nw-purple);
+}
+
+.stats-tab.active {
+  color: var(--color-nw-purple);
+  border-bottom-color: var(--color-nw-purple);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stats-tab {
+    transition: none;
+  }
+}

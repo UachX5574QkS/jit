@@ -1,0 +1,97 @@
+:host {
+  display: block;
+}
+
+.app-header {
+  min-height: var(--header-min-height);
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search --------------------------------------------------------------- */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  display: inline-flex;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 320px;
+  height: 36px;
+  padding: 0 12px 0 38px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 0 12px rgba(90, 40, 125, 0.12);
+  transition: width 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  width: 380px;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 16px rgba(90, 40, 125, 0.28);
+}
+
+/* Icon buttons --------------------------------------------------------- */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 24px;
+  min-height: 24px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-muted);
+  color: var(--color-nw-purple);
+}
+
+.icon-btn:focus-visible {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.25);
+}
+
+.icon-btn.profile {
+  background: var(--color-nw-purple-bg);
+  color: var(--color-nw-purple);
+}
+
+/* Responsive ----------------------------------------------------------- */
+@media (max-width: 768px) {
+  .search-input {
+    width: 160px;
+  }
+
+  .search-input:focus {
+    width: 200px;
+  }
+}

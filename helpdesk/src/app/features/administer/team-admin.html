@@ -1,0 +1,156 @@
+<div class="team-admin">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a class="crumb-link" routerLink="/administer">Administer</a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <span class="crumb-current">Teams</span>
+  </nav>
+
+  <h1 class="greeting">Teams</h1>
+
+  <!-- ── Create a team (R13.2) ── -->
+  <div class="card">
+    <h2 class="card-heading">Create a team</h2>
+
+    <form class="create-form" (ngSubmit)="createTeam()">
+      <div class="form-row">
+        <label class="field">
+          <span class="field-label">Title <span class="req" aria-hidden="true">*</span></span>
+          <input
+            type="text"
+            class="field-control"
+            name="title"
+            [ngModel]="newTitle()"
+            (ngModelChange)="newTitle.set($event)"
+            placeholder="e.g. Access Management"
+            aria-label="Team title"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Leader <span class="req" aria-hidden="true">*</span></span>
+          <select
+            class="field-control"
+            name="leader"
+            [ngModel]="newLeaderId()"
+            (ngModelChange)="newLeaderId.set($event === null ? null : +$event)"
+            aria-label="Team leader"
+            required
+          >
+            <option [ngValue]="null" disabled>Select a leader…</option>
+            @for (u of users(); track u.id) {
+              <option [ngValue]="u.id">{{ u.displayName }} ({{ u.username }})</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Description</span>
+        <input
+          type="text"
+          class="field-control"
+          name="description"
+          [ngModel]="newDescription()"
+          (ngModelChange)="newDescription.set($event)"
+          placeholder="Optional"
+          aria-label="Team description"
+        />
+      </label>
+
+      @if (createError()) {
+        <p class="form-error" role="alert">{{ createError() }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="!canCreate()">
+          {{ creating() ? 'Creating…' : 'Create team' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Teams table (R13.3) ── -->
+  <div class="card">
+    <h2 class="card-heading">Existing teams</h2>
+
+    @if (error()) {
+      <p class="admin-error" role="alert">{{ error() }}</p>
+    }
+
+    @if (loading() && teams().length === 0) {
+      <p class="admin-note">Loading teams…</p>
+    } @else if (isEmpty()) {
+      <p class="admin-note">No teams exist yet. Create the first one above.</p>
+    } @else {
+      <div class="table-scroll">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Leader</th>
+              <th scope="col">State</th>
+              <th scope="col">Created</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (team of teams(); track trackByTeamId($index, team)) {
+              <tr class="team-row" [class.is-closed-row]="team.isClosed">
+                <td class="col-title">
+                  <span class="team-title">{{ team.title }}</span>
+                  @if (team.description) {
+                    <span class="team-desc">{{ team.description }}</span>
+                  }
+                </td>
+                <td class="col-leader">
+                  @if (team.isClosed) {
+                    <span>{{ leaderName(team) }}</span>
+                  } @else {
+                    <label class="visually-hidden" [attr.for]="'leader-' + team.id">
+                      Leader for {{ team.title }}
+                    </label>
+                    <select
+                      class="field-control leader-select"
+                      [id]="'leader-' + team.id"
+                      [value]="team.teamLeaderId"
+                      (change)="changeLeader(team, $any($event.target).value)"
+                    >
+                      @for (u of users(); track u.id) {
+                        <option [value]="u.id">{{ u.displayName }}</option>
+                      }
+                    </select>
+                  }
+                </td>
+                <td class="col-state">
+                  <span class="state-pill" [class.is-closed]="team.isClosed">
+                    {{ team.isClosed ? 'Closed' : 'Open' }}
+                  </span>
+                </td>
+                <td>{{ team.createdAt | localDate }}</td>
+                <td class="col-actions">
+                  @if (!team.isClosed) {
+                    <button
+                      type="button"
+                      class="btn-ghost btn-danger"
+                      (click)="closeTeam(team)"
+                    >
+                      Close
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (rowMessage(team)) {
+                <tr class="row-message-row">
+                  <td colspan="5">
+                    <p class="row-message" role="alert">{{ rowMessage(team) }}</p>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

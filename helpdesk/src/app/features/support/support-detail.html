@@ -1,0 +1,469 @@
+<div class="support-detail">
+  <div class="detail-topbar">
+    <button type="button" class="btn btn-ghost" (click)="back()">
+      <svg
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5" />
+        <path d="M12 19l-7-7 7-7" />
+      </svg>
+      Back to Support Queue
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="card">
+      <p class="detail-error" role="alert">{{ error() }}</p>
+    </div>
+  } @else if (loading() && detail() === null) {
+    <div class="card">
+      <p class="detail-note">Loading request…</p>
+    </div>
+  } @else if (detail(); as d) {
+    <!-- ── Header card: reference, title, status (R7.1) ── -->
+    <div class="card detail-header">
+      <div class="detail-heading">
+        <div>
+          <p class="detail-ref">{{ d.taskReference }}</p>
+          <h1 class="greeting detail-title">{{ d.title }}</h1>
+        </div>
+        <span class="status-pill" [class.is-closed]="isClosed()" [class.is-working]="hasOpenTimer()">
+          {{ d.status }}@if (hasOpenTimer()) {<span class="working-on"> (Working On)</span>}
+        </span>
+      </div>
+
+      <!-- ── Timer: "Working on It" / "Back to Queue" (R8) ── -->
+      @if (showWorkingOnIt() || showBackToQueue()) {
+        <div class="timer-bar">
+          @if (showWorkingOnIt()) {
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="timerBusy()"
+              (click)="workOnIt()"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="13" r="8" />
+                <path d="M12 9v4l2 2" />
+                <path d="M9 2h6" />
+              </svg>
+              {{ timerBusy() ? 'Starting…' : 'Working on It' }}
+            </button>
+          } @else if (showBackToQueue()) {
+            <button
+              type="button"
+              class="btn btn-ghost timer-btn-stop"
+              [disabled]="timerBusy()"
+              (click)="backToQueue()"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="13" r="8" />
+                <rect x="9" y="10" width="6" height="6" rx="1" />
+                <path d="M9 2h6" />
+              </svg>
+              {{ timerBusy() ? 'Stopping…' : 'Back to Queue' }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (timerError()) {
+        <p class="detail-error" role="alert">{{ timerError() }}</p>
+      }
+
+      @if (actionError()) {
+        <p class="detail-error" role="alert">{{ actionError() }}</p>
+      }
+    </div>
+
+    <!-- ── Status + Assignment controls (R9, R7.2) ── -->
+    <div class="card">
+      <h2 class="card-heading">Manage Request</h2>
+      <div class="manage-grid">
+        <!-- Status: only legal next transitions (R9) -->
+        <div>
+          <label class="field-label" for="status-select">Change Status</label>
+          @if (nextStatuses().length > 0) {
+            <select
+              id="status-select"
+              class="field-control"
+              [disabled]="busy()"
+              (change)="changeStatus($any($event.target).value); $any($event.target).value = ''"
+            >
+              <option value="" selected>Select a status…</option>
+              @for (status of nextStatuses(); track trackByStatus($index, status)) {
+                <option [value]="status">{{ status }}</option>
+              }
+            </select>
+          } @else {
+            <p class="detail-note">This request is closed; no status changes are available.</p>
+          }
+        </div>
+
+        <!-- Assignment: any team member, or unassign (R7.2) -->
+        <div>
+          <label class="field-label" for="assign-select">Assigned Team Member</label>
+          <select
+            id="assign-select"
+            class="field-control"
+            [disabled]="busy()"
+            [value]="d.assignedMemberId === null ? '' : $any(d.assignedMemberId)"
+            (change)="changeAssignment($any($event.target).value)"
+          >
+            <option value="">Unassigned</option>
+            @for (member of assignmentOptions(); track trackByUserId($index, member)) {
+              <option [value]="$any(member.userId)">{{ member.displayName }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Request information (R7.1) ── -->
+    <div class="card">
+      <h2 class="card-heading">Request Information</h2>
+      <dl class="info-grid">
+        <div class="info-row">
+          <dt>Task</dt>
+          <dd>{{ d.taskName }} (v{{ d.versionNo }})</dd>
+        </div>
+        <div class="info-row">
+          <dt>Raised By</dt>
+          <dd>Member #{{ d.raisedById }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Status</dt>
+          <dd>{{ d.status }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Assigned To</dt>
+          <dd>{{ assignedLabel() }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Date Raised</dt>
+          <dd>{{ d.createdAt | localDate: 'datetime' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Last Updated</dt>
+          <dd>{{ d.updatedAt | localDate: 'datetime' }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- ── Request fields + editing (R7.1) ── -->
+    <div class="card">
+      <div class="card-header-row">
+        <h2 class="card-heading">Request Details</h2>
+        @if (!editing()) {
+          <button type="button" class="btn btn-ghost" (click)="startEdit()">Edit fields</button>
+        }
+      </div>
+
+      @if (editing() && form(); as f) {
+        <!-- Edit mode: shared form-field components + Jira + start dates (R7.1) -->
+        <form [formGroup]="f" novalidate class="edit-form">
+          @for (field of fields(); track trackByTaskFieldId($index, field)) {
+            <app-form-field
+              [field]="toDefinition(field)"
+              [errorMessage]="fieldError(toDefinition(field))"
+              [formControlName]="$any(field.taskFieldId)"
+            />
+          }
+
+          <div class="form-row">
+            <label class="field-label" for="edit-jira">Jira</label>
+            <input
+              id="edit-jira"
+              class="field-control"
+              type="text"
+              formControlName="jira"
+              placeholder="Related Jira number (optional)"
+            />
+          </div>
+
+          <div class="form-row">
+            <label class="field-label" for="edit-est">Estimated Start Date</label>
+            <input
+              id="edit-est"
+              class="field-control"
+              type="date"
+              formControlName="estimatedStartDate"
+            />
+          </div>
+
+          <div class="form-row">
+            <label class="field-label" for="edit-act">Actual Start Date</label>
+            <input
+              id="edit-act"
+              class="field-control"
+              type="date"
+              formControlName="actualStartDate"
+            />
+          </div>
+
+          <div class="edit-actions">
+            <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="cancelEdit()">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" [disabled]="!canSave()" (click)="save()">
+              {{ busy() ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <!-- Read mode: pinned-version fields + jira + dates (R7.1) -->
+        <dl class="info-grid">
+          @for (field of fields(); track trackByTaskFieldId($index, field)) {
+            <div class="info-row">
+              <dt>
+                {{ field.name }}
+                @if (field.isMandatory) {
+                  <span class="field-required" aria-hidden="true">*</span>
+                }
+              </dt>
+              <dd>{{ displayValue(field) }}</dd>
+            </div>
+          }
+          <div class="info-row">
+            <dt>Jira</dt>
+            <dd>{{ d.jiraNumber || '—' }}</dd>
+          </div>
+          <div class="info-row">
+            <dt>Estimated Start</dt>
+            <dd>{{ d.estimatedStartDate | localDate: 'date' : '—' }}</dd>
+          </div>
+          <div class="info-row">
+            <dt>Actual Start</dt>
+            <dd>{{ d.actualStartDate | localDate: 'date' : '—' }}</dd>
+          </div>
+        </dl>
+      }
+    </div>
+
+    <!-- ── Notes (internal + external; add either, R7.3–7.6) ── -->
+    <div class="card">
+      <h2 class="card-heading">Notes</h2>
+
+      @if (notes().length === 0) {
+        <p class="detail-note">No notes yet.</p>
+      } @else {
+        <ul class="note-list">
+          @for (note of notes(); track trackById($index, note)) {
+            <li class="note-item" [class.is-internal]="note.isInternal">
+              <div class="note-meta">
+                <span class="note-author">Member #{{ note.authorId }}</span>
+                <span class="note-badges">
+                  @if (note.isInternal) {
+                    <span class="note-tag note-tag-internal">Internal</span>
+                  } @else {
+                    <span class="note-tag">External</span>
+                  }
+                  <span class="note-time">{{ note.createdAt | localDate: 'datetime' }}</span>
+                </span>
+              </div>
+              <p class="note-body">{{ note.body }}</p>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- Add a note: internal or external (R7.3) -->
+      <div class="add-note">
+        <label class="field-label" for="new-note">Add a note</label>
+        <textarea
+          id="new-note"
+          class="field-control note-textarea"
+          rows="3"
+          placeholder="Add a note…"
+          [value]="noteBody()"
+          (input)="onNoteInput($any($event.target).value)"
+        ></textarea>
+
+        <fieldset class="note-visibility">
+          <legend class="field-label">Visibility</legend>
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="note-visibility"
+              [checked]="!noteInternal()"
+              (change)="setNoteInternal(false)"
+            />
+            External (visible to the raiser)
+          </label>
+          <label class="radio-option">
+            <input
+              type="radio"
+              name="note-visibility"
+              [checked]="noteInternal()"
+              (change)="setNoteInternal(true)"
+            />
+            Internal (support only)
+          </label>
+        </fieldset>
+
+        <div class="add-note-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canAddNote()"
+            (click)="addNote()"
+          >
+            {{ busy() ? 'Adding…' : 'Add Note' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Audit trail (internal-note entries INCLUDED for support, R17.4) ── -->
+    <div class="card">
+      <h2 class="card-heading">Audit Trail</h2>
+      @if (auditTrail().length === 0) {
+        <p class="detail-note">No changes recorded yet.</p>
+      } @else {
+        <ul class="audit-list">
+          @for (entry of auditTrail(); track trackById($index, entry)) {
+            <li class="audit-item">
+              <div class="audit-meta">
+                <span class="audit-field">{{ entry.fieldName }}</span>
+                <span class="audit-time">{{ entry.changedAt | localDate: 'datetime' }}</span>
+              </div>
+              <p class="audit-change">
+                <span class="audit-old">{{ entry.oldValue ?? '—' }}</span>
+                <span class="audit-arrow" aria-hidden="true">→</span>
+                <span class="audit-new">{{ entry.newValue ?? '—' }}</span>
+              </p>
+              <p class="audit-by">Changed by Member #{{ entry.changedById }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- ── Concurrent-timer prompt (R8.8) ── -->
+    @if (concurrentPrompt(); as prompt) {
+      <div class="modal-overlay" (click)="cancelConcurrent()">
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="concurrent-title"
+          aria-describedby="concurrent-desc"
+          (click)="$event.stopPropagation()"
+        >
+          <h2 id="concurrent-title" class="modal-title">You have other timers running</h2>
+          <p id="concurrent-desc" class="modal-body">
+            You already have a timer running on
+            {{ prompt.others.length }}
+            other {{ prompt.others.length === 1 ? 'request' : 'requests' }}. Do you want to stop
+            {{ prompt.others.length === 1 ? 'it' : 'them' }} and record the time before starting on
+            this one, or leave {{ prompt.others.length === 1 ? 'it' : 'them' }} running?
+          </p>
+          <ul class="modal-timer-list">
+            @for (timer of prompt.others; track trackByTimerId($index, timer)) {
+              <li>Request #{{ timer.requestId }} — started {{ timer.startedAt | localDate: 'datetime' }}</li>
+            }
+          </ul>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" (click)="cancelConcurrent()">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              [disabled]="timerBusy()"
+              (click)="resolveConcurrent(false)"
+            >
+              Leave them running
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="timerBusy()"
+              (click)="resolveConcurrent(true)"
+            >
+              Stop the others
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Duration pop-up (R8.4, R8.5) ── -->
+    @if (durationPrompt(); as prompt) {
+      <div class="modal-overlay" (click)="cancelDuration()">
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="duration-title"
+          aria-describedby="duration-desc"
+          (click)="$event.stopPropagation()"
+        >
+          <h2 id="duration-title" class="modal-title">Record your time</h2>
+          <p id="duration-desc" class="modal-body">
+            You worked on this request for <strong>{{ durationSummary() }}</strong>. Keep this
+            value, or edit the number of minutes before confirming.
+          </p>
+
+          <div class="form-row">
+            <label class="field-label" for="duration-minutes">Duration (minutes)</label>
+            <input
+              id="duration-minutes"
+              class="field-control"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              [value]="prompt.minutes"
+              (input)="onDurationInput($any($event.target).value)"
+              [attr.aria-invalid]="prompt.error !== null"
+              [attr.aria-describedby]="prompt.error ? 'duration-error' : null"
+            />
+          </div>
+
+          @if (prompt.error) {
+            <p id="duration-error" class="detail-error" role="alert">{{ prompt.error }}</p>
+          }
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" (click)="cancelDuration()">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="timerBusy()"
+              (click)="confirmDuration()"
+            >
+              {{ timerBusy() ? 'Recording…' : 'Confirm' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

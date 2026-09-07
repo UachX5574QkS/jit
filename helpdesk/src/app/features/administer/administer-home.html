@@ -1,0 +1,70 @@
+<div class="administer-home">
+  <h1 class="greeting">Administer</h1>
+
+  <div class="card">
+    <h2 class="card-heading">Management areas</h2>
+
+    @if (tiles().length === 0) {
+      <p class="admin-note">You do not have any administration areas available.</p>
+    } @else {
+      <div class="tile-grid">
+        @for (tile of tiles(); track tile.path) {
+          <a class="admin-tile" [routerLink]="tile.path">
+            <span class="tile-icon" aria-hidden="true">
+              @switch (tile.icon) {
+                @case ('teams') {
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                }
+                @case ('dataPoints') {
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M4 7V4h16v3" />
+                    <path d="M9 20h6" />
+                    <path d="M12 4v16" />
+                  </svg>
+                }
+                @case ('membership') {
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="22" y1="11" x2="16" y2="11" />
+                  </svg>
+                }
+                @case ('tasks') {
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                  </svg>
+                }
+                @default {
+                  <svg viewBox="0 0 24 24" width="24" height="24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                  </svg>
+                }
+              }
+            </span>
+            <span class="tile-body">
+              <span class="tile-label">{{ tile.label }}</span>
+              <span class="tile-description">{{ tile.description }}</span>
+            </span>
+          </a>
+        }
+      </div>
+    }
+  </div>
+</div>

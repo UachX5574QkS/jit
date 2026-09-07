@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 24px 20px;
+  margin-top: 8px;
+}
+
+.app-footer p {
+  margin: 2px 0;
+}
+
+.brand-name {
+  color: var(--color-nw-purple);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer-links {
+  font-size: 12px;
+}
+
+.privacy-link {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.privacy-link:hover {
+  color: var(--color-nw-purple);
+  text-decoration: underline;
+}
+
+.meta-text {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.status {
+  font-style: italic;
+}

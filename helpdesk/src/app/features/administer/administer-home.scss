@@ -1,0 +1,99 @@
+:host {
+  display: block;
+}
+
+.administer-home {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 0 0 20px;
+}
+
+.admin-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Tile grid (UI spec: content cards, purple accents). Collapses to a single
+   column on tablet/mobile.
+   ------------------------------------------------------------------------- */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.admin-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-tile:hover,
+.admin-tile:focus-visible {
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 12px rgba(90, 40, 125, 0.12);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.tile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  color: var(--color-nw-purple);
+  background: var(--color-nw-purple-bg);
+}
+
+.tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tile-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tile-description {
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .tile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-tile {
+    transition: none;
+  }
+  .admin-tile:hover,
+  .admin-tile:focus-visible {
+    transform: none;
+  }
+}

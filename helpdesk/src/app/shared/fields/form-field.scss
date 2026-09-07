@@ -1,0 +1,148 @@
+:host {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+/* Label: uppercase, 12px, weight 600, purple (UI spec: Form Fields). */
+.field-label {
+  display: inline-block;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-nw-purple);
+}
+
+/* Required indicator: red asterisk (UI spec: Form Fields). */
+.field-required {
+  color: var(--color-red);
+  margin-left: 2px;
+}
+
+/* The "?" help affordance (R2.6). Min 24x24 target (WCAG 2.5.8). */
+.help-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-nw-purple);
+  background: var(--color-nw-purple-bg);
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.help-toggle:hover {
+  background: var(--color-nw-purple);
+  color: #ffffff;
+}
+
+.help-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.25);
+}
+
+.field-help {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: var(--color-nw-purple-bg);
+  border-left: 3px solid var(--color-nw-purple);
+  border-radius: 6px;
+}
+
+/* Inputs / selects: 1px line border, 8px radius, 10px 12px padding. */
+.field-control {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.25);
+}
+
+.field-control:disabled {
+  background: var(--bg-muted);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}
+
+/* Error state: red border on the control, red message below (R3, R3.6). */
+.has-error .field-control {
+  border-color: var(--color-red);
+}
+
+.has-error .field-control:focus {
+  box-shadow: 0 0 0 3px rgba(213, 40, 27, 0.2);
+}
+
+.field-error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-red);
+}
+
+/* Boolean checkbox row. */
+.boolean-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.boolean-control input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-nw-purple);
+  cursor: pointer;
+}
+
+.boolean-control input:disabled {
+  cursor: not-allowed;
+}
+
+/* Screen-reader-only text. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-toggle {
+    transition: none;
+  }
+}

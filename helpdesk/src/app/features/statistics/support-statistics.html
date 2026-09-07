@@ -1,0 +1,107 @@
+<div class="support-statistics">
+  <h1 class="greeting">Support Statistics</h1>
+
+  <app-stats-nav />
+
+  <!-- ── Team selector + "All Teams" (R12.1) ── -->
+  <div class="card">
+    <div class="team-selector">
+      <label class="field-label" for="support-stats-team">Team</label>
+      <select
+        id="support-stats-team"
+        class="team-select"
+        [value]="teamValue()"
+        (change)="onTeamChange($any($event.target).value)"
+        aria-label="Select the support team to report on"
+      >
+        @for (opt of teamOptions(); track opt.value) {
+          <option [value]="opt.value === 'all' ? 'all' : opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="card">
+      <p class="stats-error" role="alert">{{ error() }}</p>
+    </div>
+  } @else if (loading() && !stats()) {
+    <div class="card">
+      <p class="stats-note">Loading the support statistics…</p>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="card">
+      <p class="stats-note">
+        There is no support activity to show for the selected team yet.
+      </p>
+    </div>
+  } @else {
+    <!-- ── Status-by-month stacked bar (R12.2) ── -->
+    <div class="card">
+      <h2 class="card-heading">Requests by status, by month</h2>
+      <app-stacked-bar-chart [bars]="monthBars()" />
+    </div>
+
+    <!-- ── Assigned-count matrix: rows × members (R12.3) ── -->
+    <div class="card">
+      <h2 class="card-heading">Requests assigned by team member</h2>
+      @if (rows().length === 0 || members().length === 0) {
+        <p class="stats-note">No assignable tasks or members in scope.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th scope="col" class="col-row">Task</th>
+                @for (member of members(); track trackByMemberId($index, member)) {
+                  <th scope="col" class="col-num">{{ member.memberName }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track trackByTaskId($index, row)) {
+                <tr>
+                  <th scope="row" class="col-row">{{ row.label }}</th>
+                  @for (member of members(); track trackByMemberId($index, member)) {
+                    <td class="col-num">{{ assignedCount(row, member) }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- ── Accepted → Complete average-duration matrix: rows × members (R12.4) ── -->
+    <div class="card">
+      <h2 class="card-heading">Average Accepted → Complete by team member</h2>
+      @if (rows().length === 0 || members().length === 0) {
+        <p class="stats-note">No assignable tasks or members in scope.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th scope="col" class="col-row">Task</th>
+                @for (member of members(); track trackByMemberId($index, member)) {
+                  <th scope="col" class="col-dur">{{ member.memberName }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track trackByTaskId($index, row)) {
+                <tr>
+                  <th scope="row" class="col-row">{{ row.label }}</th>
+                  @for (member of members(); track trackByMemberId($index, member)) {
+                    <td class="col-dur">{{ avgDurationLabel(row, member) }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

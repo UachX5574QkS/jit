@@ -1,0 +1,109 @@
+:host {
+  display: block;
+}
+
+.user-statistics {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 0 0 20px;
+}
+
+/* Section/card heading (UI spec: 16px, weight 700). */
+.card-heading {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* -------------------------------------------------------------------------
+   Notes / errors
+   ------------------------------------------------------------------------- */
+.stats-note {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.stats-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red);
+  background: rgba(213, 40, 27, 0.08);
+  border-left: 3px solid var(--color-red);
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------
+   Side-by-side pies (R10.2, R10.3): type pie left, time-by-type pie right.
+   Collapses to a single column on tablet/mobile (UI spec: single-column
+   charts ≤ 900px).
+   ------------------------------------------------------------------------- */
+.pie-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.pie-cell {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .pie-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Summary table (R10.4, R10.5) — same table styling as the Requests list.
+   ------------------------------------------------------------------------- */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.summary-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-3);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.summary-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.summary-table .col-type {
+  font-weight: 500;
+  text-align: left;
+}
+
+.summary-table .col-num,
+.summary-table .col-dur {
+  text-align: right;
+}
+
+.summary-table th.col-num,
+.summary-table th.col-dur {
+  text-align: right;
+}

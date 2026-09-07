@@ -1,0 +1,294 @@
+<div class="task-admin">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a class="crumb-link" routerLink="/administer">Administer</a>
+    <span class="crumb-sep" aria-hidden="true">/</span>
+    <span class="crumb-current">Tasks</span>
+  </nav>
+
+  <h1 class="greeting">Tasks</h1>
+
+  <!-- ── Pick a team you lead (R16.1) ── -->
+  <div class="card">
+    <h2 class="card-heading">Choose a team</h2>
+
+    @if (ledTeamIds().length === 0) {
+      <p class="admin-note">You do not lead any teams.</p>
+    } @else {
+      <label class="field">
+        <span class="field-label">Team you lead</span>
+        <select
+          class="field-control team-select"
+          aria-label="Team to manage tasks for"
+          [value]="selectedTeamId() ?? ''"
+          (change)="onSelectTeam($any($event.target).value)"
+        >
+          <option value="" disabled [selected]="selectedTeamId() === null">Select a team…</option>
+          @for (id of ledTeamIds(); track id) {
+            <option [value]="id" [selected]="selectedTeamId() === id">{{ teamLabel(id) }}</option>
+          }
+        </select>
+      </label>
+    }
+  </div>
+
+  @if (selectedTeamId() !== null) {
+    <!-- ── Tasks list (R16.5) ── -->
+    <div class="card">
+      <div class="card-head-row">
+        <h2 class="card-heading">Active tasks</h2>
+        <button type="button" class="btn-primary" (click)="startCreate()">New task</button>
+      </div>
+
+      @if (listError()) {
+        <p class="admin-error" role="alert">{{ listError() }}</p>
+      }
+
+      @if (loadingTasks() && tasks().length === 0) {
+        <p class="admin-note">Loading tasks…</p>
+      } @else if (tasks().length === 0) {
+        <p class="admin-note">This team has no active tasks. Create one with “New task”.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th scope="col">Task</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (task of tasks(); track trackByTaskId($index, task)) {
+                <tr class="task-row">
+                  <td class="col-name">{{ task.name }}</td>
+                  <td class="col-actions">
+                    <button type="button" class="btn-ghost" (click)="startEdit(task)">
+                      Edit (new version)
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-ghost btn-danger"
+                      (click)="retireTask(task)"
+                    >
+                      Retire
+                    </button>
+                  </td>
+                </tr>
+                @if (rowMessage(task)) {
+                  <tr class="row-message-row">
+                    <td colspan="2">
+                      <p class="row-message" role="alert">{{ rowMessage(task) }}</p>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- ── Task editor (create / new version) ── -->
+    @if (editorOpen()) {
+      <div class="card editor-card">
+        <div class="card-head-row">
+          <h2 class="card-heading">
+            {{ isEditing() ? 'Edit task — publishes a new version' : 'Create a task' }}
+          </h2>
+          <button type="button" class="btn-ghost" (click)="closeEditor()">Close</button>
+        </div>
+
+        @if (isEditing()) {
+          <p class="admin-note version-note">
+            Saving creates a new version. Requests already raised keep the version
+            they were created on (version pinning, R16.4).
+          </p>
+        }
+
+        @if (editorLoading()) {
+          <p class="admin-note">Loading current version…</p>
+        } @else {
+          <form class="task-form" (ngSubmit)="save()">
+            <label class="field">
+              <span class="field-label">Name <span class="req" aria-hidden="true">*</span></span>
+              <input
+                type="text"
+                class="field-control"
+                name="taskName"
+                [ngModel]="formName()"
+                (ngModelChange)="formName.set($event)"
+                placeholder="e.g. New starter access"
+                aria-label="Task name"
+                required
+              />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Support notes</span>
+              <textarea
+                class="field-control"
+                name="supportNotes"
+                rows="3"
+                [ngModel]="formSupportNotes()"
+                (ngModelChange)="formSupportNotes.set($event)"
+                placeholder="Shown to support members via the Help button when working a request"
+                aria-label="Task support notes"
+              ></textarea>
+            </label>
+
+            <!-- ── Fields (R16.2, R16.3) ── -->
+            <fieldset class="fields-block">
+              <legend class="field-label">Fields (in order)</legend>
+
+              @if (fields().length === 0) {
+                <p class="admin-note">No fields yet. Add one by data point id below.</p>
+              } @else {
+                <ul class="field-list">
+                  @for (f of fields(); track trackByFieldKey($index, f); let i = $index) {
+                    <li class="field-item">
+                      <div class="field-item-head">
+                        <div class="field-identity">
+                          <span class="field-order">#{{ i + 1 }}</span>
+                          <span class="field-name">
+                            {{ f.name || 'Data point ' + f.dataPointId }}
+                          </span>
+                          @if (f.dataType) {
+                            <span class="field-type">{{ f.dataType }}</span>
+                          } @else {
+                            <span class="field-type pending">resolved on save</span>
+                          }
+                          <span class="field-dp">DP #{{ f.dataPointId }}</span>
+                        </div>
+                        <div class="field-move">
+                          <button
+                            type="button"
+                            class="btn-icon"
+                            [disabled]="i === 0"
+                            (click)="moveField(f.key, -1)"
+                            [attr.aria-label]="'Move ' + (f.name || 'field') + ' up'"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-icon"
+                            [disabled]="i === fields().length - 1"
+                            (click)="moveField(f.key, 1)"
+                            [attr.aria-label]="'Move ' + (f.name || 'field') + ' down'"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-icon btn-remove"
+                            (click)="removeField(f.key)"
+                            [attr.aria-label]="'Remove ' + (f.name || 'field')"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Name and data type are NOT overridable (R16.3): shown
+                           read-only above; only these controls are editable. -->
+                      <div class="field-controls">
+                        <label class="check">
+                          <input
+                            type="checkbox"
+                            [checked]="f.isMandatory"
+                            (change)="updateFieldMandatory(f.key, $any($event.target).checked)"
+                          />
+                          <span>Mandatory</span>
+                        </label>
+
+                        <label class="field sub-field">
+                          <span class="sub-label">Description override</span>
+                          <input
+                            type="text"
+                            class="field-control"
+                            [ngModel]="f.descriptionOverride"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="updateFieldDescription(f.key, $event)"
+                            placeholder="Defaults to the data point description"
+                          />
+                        </label>
+
+                        <label class="field sub-field">
+                          <span class="sub-label">Help text override</span>
+                          <input
+                            type="text"
+                            class="field-control"
+                            [ngModel]="f.helpTextOverride"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="updateFieldHelp(f.key, $event)"
+                            placeholder="Defaults to the data point help text"
+                          />
+                        </label>
+
+                        <label class="field sub-field">
+                          <span class="sub-label">Dropdown options override (one per line)</span>
+                          <textarea
+                            class="field-control"
+                            rows="2"
+                            [ngModel]="f.optionsOverride"
+                            [ngModelOptions]="{ standalone: true }"
+                            (ngModelChange)="updateFieldOptions(f.key, $event)"
+                            placeholder="Only for Dropdown fields; blank uses the data point options"
+                          ></textarea>
+                        </label>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+
+              <div class="add-field-row">
+                <label class="field add-field">
+                  <span class="sub-label">Add a field by data point id</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    class="field-control"
+                    name="newDataPointId"
+                    [ngModel]="newDataPointId()"
+                    (ngModelChange)="newDataPointId.set($event)"
+                    placeholder="e.g. 7"
+                    inputmode="numeric"
+                    aria-label="Data point id to add"
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="btn-ghost"
+                  [disabled]="!canAddField()"
+                  (click)="addField()"
+                >
+                  Add field
+                </button>
+              </div>
+            </fieldset>
+
+            @if (formError()) {
+              <p class="form-error" role="alert">{{ formError() }}</p>
+            }
+            @if (publishedVersionNo() !== null) {
+              <p class="form-success" role="status">
+                Saved as version {{ publishedVersionNo() }}.
+              </p>
+            }
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="!canSave()">
+                @if (saving()) {
+                  Saving…
+                } @else {
+                  {{ isEditing() ? 'Publish new version' : 'Create task' }}
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  }
+</div>

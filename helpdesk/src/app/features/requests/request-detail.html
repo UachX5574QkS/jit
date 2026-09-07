@@ -1,0 +1,231 @@
+<div class="request-detail">
+  <div class="detail-topbar">
+    <button type="button" class="btn btn-ghost" (click)="back()">
+      <svg
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M19 12H5" />
+        <path d="M12 19l-7-7 7-7" />
+      </svg>
+      Back to Requests
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="card">
+      <p class="detail-error" role="alert">{{ error() }}</p>
+    </div>
+  } @else if (loading() && detail() === null) {
+    <div class="card">
+      <p class="detail-note">Loading request…</p>
+    </div>
+  } @else if (detail(); as d) {
+    <!-- ── Header card: reference, title, status, actions (R5.1, R5.5–5.8) ── -->
+    <div class="card detail-header">
+      <div class="detail-heading">
+        <div>
+          <p class="detail-ref">{{ d.taskReference }}</p>
+          <h1 class="greeting detail-title">{{ d.title }}</h1>
+        </div>
+        <span class="status-pill" [class.is-closed]="isClosed()">{{ d.status }}</span>
+      </div>
+
+      @if (actionError()) {
+        <p class="detail-error" role="alert">{{ actionError() }}</p>
+      }
+
+      <!-- Raiser status actions + Clone (R5.5–5.8) -->
+      <div class="detail-actions">
+        @if (canCancel()) {
+          <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="cancel()">
+            Cancel Request
+          </button>
+        }
+        @if (canReopen()) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="reopen()">
+            Reopen
+          </button>
+        }
+        <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="clone()">
+          Clone
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Request information (R5.1) ── -->
+    <div class="card">
+      <h2 class="card-heading">Request Information</h2>
+      <dl class="info-grid">
+        <div class="info-row">
+          <dt>Task</dt>
+          <dd>{{ d.taskName }} (v{{ d.versionNo }})</dd>
+        </div>
+        <div class="info-row">
+          <dt>Jira</dt>
+          <dd>{{ d.jiraNumber || '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Status</dt>
+          <dd>{{ d.status }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Assigned To</dt>
+          <dd>{{ d.assignedMemberId ? 'Member #' + d.assignedMemberId : 'Unassigned' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Date Raised</dt>
+          <dd>{{ d.createdAt | localDate: 'datetime' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Last Updated</dt>
+          <dd>{{ d.updatedAt | localDate: 'datetime' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Estimated Start</dt>
+          <dd>{{ d.estimatedStartDate | localDate: 'date' : '—' }}</dd>
+        </div>
+        <div class="info-row">
+          <dt>Actual Start</dt>
+          <dd>{{ d.actualStartDate | localDate: 'date' : '—' }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- ── Request fields + user-field edits (R5.4) ── -->
+    <div class="card">
+      <div class="card-header-row">
+        <h2 class="card-heading">Request Details</h2>
+        @if (isRaiser() && !editing()) {
+          <button type="button" class="btn btn-ghost" (click)="startEdit()">Edit my fields</button>
+        }
+      </div>
+
+      @if (editing() && form(); as f) {
+        <!-- Edit mode: shared form-field components + Jira, mandatory not blankable (R5.4) -->
+        <form [formGroup]="f" novalidate class="edit-form">
+          @for (field of fields(); track trackByTaskFieldId($index, field)) {
+            <app-form-field
+              [field]="toDefinition(field)"
+              [errorMessage]="fieldError(toDefinition(field))"
+              [formControlName]="$any(field.taskFieldId)"
+            />
+          }
+
+          <div class="form-row">
+            <label class="field-label" for="edit-jira">Jira</label>
+            <input
+              id="edit-jira"
+              class="field-control"
+              type="text"
+              formControlName="jira"
+              placeholder="Related Jira number (optional)"
+            />
+          </div>
+
+          <div class="edit-actions">
+            <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="cancelEdit()">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" [disabled]="!canSave()" (click)="save()">
+              {{ busy() ? 'Saving…' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <!-- Read mode: pinned-version fields with their values (R5.1) -->
+        <dl class="info-grid">
+          @for (field of fields(); track trackByTaskFieldId($index, field)) {
+            <div class="info-row">
+              <dt>
+                {{ field.name }}
+                @if (field.isMandatory) {
+                  <span class="field-required" aria-hidden="true">*</span>
+                }
+              </dt>
+              <dd>{{ displayValue(field) }}</dd>
+            </div>
+          } @empty {
+            <p class="detail-note">This request has no additional fields.</p>
+          }
+        </dl>
+      }
+    </div>
+
+    <!-- ── Notes (external only; add note, R5.3) ── -->
+    <div class="card">
+      <h2 class="card-heading">Notes</h2>
+
+      @if (externalNotes().length === 0) {
+        <p class="detail-note">No notes yet.</p>
+      } @else {
+        <ul class="note-list">
+          @for (note of externalNotes(); track trackById($index, note)) {
+            <li class="note-item">
+              <div class="note-meta">
+                <span class="note-author">Member #{{ note.authorId }}</span>
+                <span class="note-time">{{ note.createdAt | localDate: 'datetime' }}</span>
+              </div>
+              <p class="note-body">{{ note.body }}</p>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- Add a note (visible to support, R5.3) -->
+      <div class="add-note">
+        <label class="field-label" for="new-note">Add a note</label>
+        <textarea
+          id="new-note"
+          class="field-control note-textarea"
+          rows="3"
+          placeholder="Add a note for the support team…"
+          [value]="noteBody()"
+          (input)="onNoteInput($any($event.target).value)"
+        ></textarea>
+        <div class="add-note-actions">
+          <button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="!canAddNote()"
+            (click)="addNote()"
+          >
+            {{ busy() ? 'Adding…' : 'Add Note' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Audit trail (internal-note entries excluded by the backend, R5.1/R17.4) ── -->
+    <div class="card">
+      <h2 class="card-heading">Audit Trail</h2>
+      @if (auditTrail().length === 0) {
+        <p class="detail-note">No changes recorded yet.</p>
+      } @else {
+        <ul class="audit-list">
+          @for (entry of auditTrail(); track trackById($index, entry)) {
+            <li class="audit-item">
+              <div class="audit-meta">
+                <span class="audit-field">{{ entry.fieldName }}</span>
+                <span class="audit-time">{{ entry.changedAt | localDate: 'datetime' }}</span>
+              </div>
+              <p class="audit-change">
+                <span class="audit-old">{{ entry.oldValue ?? '—' }}</span>
+                <span class="audit-arrow" aria-hidden="true">→</span>
+                <span class="audit-new">{{ entry.newValue ?? '—' }}</span>
+              </p>
+              <p class="audit-by">Changed by Member #{{ entry.changedById }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,1055 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create the standalone Angular project under `helpdesk/` (latest Angular, standalone components, routing) — separate from the existing React `frontend/`.": [
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788558724394
+      },
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559170422
+      }
+    ],
+    "1.2 Create the Node/Express backend project with a JSON API skeleton, config for the local `helpdesk` Postgres connection, and a dev script that runs frontend + backend together on the laptop.": [
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559174051
+      },
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559375869
+      }
+    ],
+    "1.3 Add a parameterised query/data-access layer (no string-interpolated SQL) and a migration runner.": [
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559379418
+      },
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559583633
+      }
+    ],
+    "1. Project scaffolding and local runtime": [
+      {
+        "executionId": "78622c3c-cf0b-46a8-a259-6f46187bf841",
+        "chatSessionId": "sess_acb47f46-0cc9-4f48-b7ca-d2b8cc9bc777",
+        "timestamp": 1788559583667
+      }
+    ],
+    "2.1 Create identity/org tables: `app_user`, `area_manager`, `admin_group` (all timestamps `timestamptz`).": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788559709070
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788559826233
+      }
+    ],
+    "2.2 Create `team` and `team_member`.": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788559829674
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788559925401
+      }
+    ],
+    "2.3 Create `data_point`, `task`, `task_version`, `task_field` (versioned task model).": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788559928503
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560050310
+      }
+    ],
+    "2.4 Create `request`, `request_field_value`, `request_note`.": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560055494
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560175730
+      }
+    ],
+    "2.5 Create `time_slice` and `active_timer` (unique open-timer per request/member).": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560178774
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560281475
+      }
+    ],
+    "2.6 Create `audit_entry` (column-level) and `request_last_seen`.": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560284713
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560398738
+      }
+    ],
+    "2.7 Add the `status` enum and stop-state definitions.": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560402546
+      },
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560712360
+      }
+    ],
+    "2. Database schema and migrations": [
+      {
+        "executionId": "f2f5c810-4e78-4504-a528-526b1b6c6099",
+        "chatSessionId": "sess_88af92d2-672c-491a-9095-98a54dc99653",
+        "timestamp": 1788560712388
+      }
+    ],
+    "3.1 Implement password hashing (bcrypt/argon2) helpers; ensure hashes are never returned or logged.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740365
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560748279
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560925302
+      }
+    ],
+    "3.2 Implement the `CurrentUser` resolver (dev session cookie now; abstraction ready for IDCS) exposing id, roles, teams led, teams member of, isAdmin, timezone.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740395
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560929215
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561194508
+      }
+    ],
+    "3.3 Implement role-based authorisation middleware enforced on every endpoint; write tests for each role boundary.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740419
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561197991
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561421810
+      }
+    ],
+    "3.4 Implement the column-level audit writer that runs in the same transaction as any mutation.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740448
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561426004
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561612694
+      }
+    ],
+    "3.5 Implement the status state machine (allowed transitions, COMPLETE-only-from-ACTIVE, cancel-from-any-non-stop) with unit tests for allowed and blocked transitions.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740485
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561616434
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561806034
+      }
+    ],
+    "3.6 Implement the manager-hierarchy resolver with area-manager cutoff and cycle termination; unit test both.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740509
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788561810087
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788563641236
+      }
+    ],
+    "3.7 Implement server-side field validation per data type (Text, Email, Date, Numeric, Date+Time, Time, Boolean, Dropdown, Regexp) and mandatory rules; unit test each type incl. regexp/email/numeric.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740533
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788563644704
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788563883130
+      }
+    ],
+    "3.8 Implement the uniform error model and error codes (INVALID_TRANSITION, MANDATORY_FIELD, VALIDATION_FAILED, FORBIDDEN, CONFLICT_OPEN_REQUESTS, TIMER_MIN_DURATION).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740554
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788563887005
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788564087205
+      }
+    ],
+    "4.1 Implement `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` with HTTP-only session cookie.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740583
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788564092150
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788569874570
+      }
+    ],
+    "4.2 Implement `GET /api/auth/users` (dev-only) for the login drop-down formatting.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740603
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788569878836
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788575147939
+      }
+    ],
+    "5.1 Team admin: create/list, change leader, close (guarded by open requests).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740635
+      },
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788575152494
+      },
+      {
+        "executionId": "c83c42b2-6a28-4355-9790-1d26a9927754",
+        "chatSessionId": "sess_1d24a582-f6dd-4a91-8581-0006265090f7",
+        "timestamp": 1788582063453
+      }
+    ],
+    "5.2 Data point admin: create (name, description, data type, default help text, options/regexp), list, retire (with retirement rules).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740668
+      },
+      {
+        "executionId": "c83c42b2-6a28-4355-9790-1d26a9927754",
+        "chatSessionId": "sess_1d24a582-f6dd-4a91-8581-0006265090f7",
+        "timestamp": 1788582064828
+      }
+    ],
+    "5.3 Team-leader team management: update details, change membership, member-removal guard for non-closed requests.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740693
+      },
+      {
+        "executionId": "c83c42b2-6a28-4355-9790-1d26a9927754",
+        "chatSessionId": "sess_1d24a582-f6dd-4a91-8581-0006265090f7",
+        "timestamp": 1788582071964
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673543048
+      }
+    ],
+    "5.4 Team-leader task management: create/new-version tasks, field order/fields/dropdown overrides/support notes, override description+help but not name/data type, retire task; version pinning on edit.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740718
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788589681329
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590275087
+      }
+    ],
+    "6.1 Workflow support: list open teams, list active tasks for a team, get current task version fields.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740737
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590281365
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590557590
+      }
+    ],
+    "6.2 `POST /api/review/summary` calling Ollama server-side with short timeout and `{available:false}` fallback; display-only, not persisted.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740761
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590562022
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590813600
+      }
+    ],
+    "6.3 `POST /api/requests` — create with unique reference, status NEW, pinned task version, timestamps.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740782
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788590816962
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788591185043
+      }
+    ],
+    "6.4 `GET /api/requests/{id}` — detail with audit trail; exclude internal notes for non-support viewers; record `last_seen`.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740811
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788591189626
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788591644720
+      }
+    ],
+    "6.5 User-side mutations: update Jira + user fields (mandatory not blankable), add note, cancel (raiser/non-stop), reopen (raiser-who-cancelled), clone draft.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740843
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788591648216
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592208290
+      }
+    ],
+    "6.6 `GET /api/requests` list with mine/team scope, hide-complete, search; hierarchy-scoped for \"My Team\".": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740866
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592213560
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592585633
+      }
+    ],
+    "6.7 Estimated-effort endpoint (sum of completed-request slices ÷ completed count, per task type).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740887
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592590009
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592884748
+      }
+    ],
+    "6.8 \"Updated\" indicator computation from `request_last_seen` vs non-internal changes.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740910
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788592888239
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788593189523
+      }
+    ],
+    "7.1 Support list endpoint with team drop-down, mine/team-queue, hide-complete, show-unassigned, search.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740933
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788593194303
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788593538601
+      }
+    ],
+    "7.2 Support mutations: update any field + status (state-machine checked) + assignment (any member → any member).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560740965
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788593541982
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788594025886
+      }
+    ],
+    "7.3 Internal vs external notes with correct \"Updated\"-trigger behaviour (internal update shows on support screen only).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741000
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788594029514
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788594603131
+      }
+    ],
+    "7.4 Timer start (ACTIVE-only), concurrent-timer prompt resolution, timer stop with duration edit (>1 min), record slice with member; auto-stop-and-record on leaving ACTIVE.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741019
+      },
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788594606978
+      }
+    ],
+    "8.1 User statistics: status-by-month (viewer timezone), type pie, time-by-type pie, summary table with New→Triage and Triage→Complete averages (exclude Rejected/Cancelled).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741044
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673539962
+      }
+    ],
+    "8.2 Team statistics: same, hierarchy-scoped.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741069
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673550429
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673941104
+      }
+    ],
+    "8.3 Support statistics: team selector + All Teams, status-by-month, assigned-count table (Task or Team-Task rows × members), Accepted→Complete average-duration table (exclude Rejected/Cancelled).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741094
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673945209
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788674302940
+      }
+    ],
+    "9.1 Implement the `ui-foundations` shell: 108px icon sidebar, top header (search, dark-mode toggle), content cards, footer, responsive breakpoints, reduced-motion, dark-mode persisted to localStorage.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741116
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788674312815
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788674690568
+      }
+    ],
+    "9.2 Implement `CurrentUserService`, HTTP interceptor (auth + error model), and role-based route guards; render menu from role superset.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741136
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788674694961
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675132354
+      }
+    ],
+    "9.3 Implement the browser-local date pipe and timezone handling used across screens.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741160
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675136831
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675322705
+      }
+    ],
+    "9.4 Implement shared form-field components honouring data types (incl. date/date-time pickers) and the \"?\" help affordance, plus chart wrappers (stacked bar, pie).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741193
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675327611
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675813480
+      }
+    ],
+    "10.1 Login screen with dev drop-down; establish session; load CurrentUser.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741219
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675817402
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676184930
+      }
+    ],
+    "10.2 New workflow Step 1 (team → task), Step 2 (typed fields, mandatory/type gating, Jira field), Step 3 (Ollama summary with fallback), Submit.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741243
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676188919
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676573508
+      }
+    ],
+    "11.1 List with search, My Requests/My Team toggle, Hide Complete, all columns incl. \"(Working On)\" and \"Updated\".": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741267
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676577609
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676886462
+      }
+    ],
+    "11.2 Detail view: full info + audit (internal notes hidden), notes, user-field edits, Cancel/Reopen/Clone.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741288
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676890031
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788677393280
+      }
+    ],
+    "12.1 Queue with team drop-down, My Queue/Team Queue toggle, Hide Complete, Show Unassigned, search.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741311
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788677397127
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788677746361
+      }
+    ],
+    "12.2 Detail: full editing incl. status via state machine, assignment, internal/external notes.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741334
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788677750028
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679072468
+      }
+    ],
+    "12.3 Timer UI: \"Working on It\"/\"Back to Queue\" (ACTIVE-only), duration pop-up with editable value, concurrent-timer prompt.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741354
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679076288
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679590199
+      }
+    ],
+    "13.1 User Statistics dashboard.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741386
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679594477
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679858012
+      }
+    ],
+    "13.2 Team Statistics dashboard.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741421
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679862191
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788680180655
+      }
+    ],
+    "13.3 Support Statistics dashboard.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741448
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788680184340
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788681275696
+      }
+    ],
+    "14.1 Tool Administrator tiles: Teams management, Data Points management.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741471
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788681279740
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788681996462
+      }
+    ],
+    "14.2 Team Leader tiles: Teams membership, Tasks (create/version/retire).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741500
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788682001909
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788683520619
+      }
+    ],
+    "15.1 Seed script: ≥1 administrator; ≥5 teams each with a leader, ≥5 members, ≥3 tasks; each leader has 2 members who each manage 2 users; users with several requests across teams/types; requests spanning statuses that exercise all transition routes; all passwords \"password1\" hashed.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741521
+      },
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788683525953
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788684155527
+      }
+    ],
+    "16.1 Verify reference-data guards end-to-end (close team / remove member / retire blocked by open requests).": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741550
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788684160000
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788684435677
+      }
+    ],
+    "16.2 Verify the full status lifecycle and raiser cancel/reopen paths through the UI against seeded data.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741571
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788684439686
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788685082331
+      }
+    ],
+    "16.3 Verify timezone rendering and month bucketing across screens and statistics.": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788560741595
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788685085999
+      },
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788685413541
+      }
+    ],
+    "3. Cross-cutting backend services": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788564087257
+      }
+    ],
+    "4. Authentication endpoints and dev login": [
+      {
+        "executionId": "54158faa-410e-4bb2-b8b6-eb0c2e3eaeac",
+        "chatSessionId": "sess_9988374e-1921-4a8f-9bba-8b8aefb62e87",
+        "timestamp": 1788575147988
+      }
+    ],
+    "6. Request lifecycle APIs": [
+      {
+        "executionId": "838b2b43-df5f-4d08-9028-7f0245a68ed7",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788593189565
+      }
+    ],
+    "5. Reference data APIs (admin + team leader)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788673543098
+      }
+    ],
+    "8. Statistics APIs": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788674302978
+      }
+    ],
+    "9. Shared frontend foundation": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788675813505
+      }
+    ],
+    "10. Login and New workflow (frontend)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788676573591
+      }
+    ],
+    "11. Requests screen (frontend)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788677393316
+      }
+    ],
+    "12. Support screen (frontend)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788679590234
+      }
+    ],
+    "13. Statistics screens (frontend)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788681275731
+      }
+    ],
+    "14. Administer screens (frontend)": [
+      {
+        "executionId": "8cd1ce3c-2e32-4a2e-bfd6-a066019fb1ec",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788683520649
+      }
+    ],
+    "15. Development seed data": [
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788684155586
+      }
+    ],
+    "16. End-to-end verification": [
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788685413581
+      }
+    ],
+    "7. Support and time-tracking APIs": [
+      {
+        "executionId": "1b316199-4abb-47b8-9e8d-6b52ecf106b4",
+        "chatSessionId": "sess_067fba3d-85e7-424a-b887-29a0c1826c2b",
+        "timestamp": 1788685431637
+      }
+    ]
+  }
+}

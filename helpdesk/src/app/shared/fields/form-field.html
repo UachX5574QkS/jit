@@ -1,0 +1,91 @@
+@let f = field();
+@let showError = errorMessage() !== null && touched();
+
+<div class="form-field" [class.has-error]="showError">
+  <!-- Label row: label (uppercase/purple) + required asterisk + "?" help toggle -->
+  <div class="field-label-row">
+    <label class="field-label" [attr.for]="uid + '-control'">
+      {{ f.label }}
+      @if (f.isMandatory) {
+        <span class="field-required" aria-hidden="true">*</span>
+        <span class="visually-hidden">(required)</span>
+      }
+    </label>
+
+    @if (hasHelp()) {
+      <button
+        type="button"
+        class="help-toggle"
+        [id]="uid + '-help-toggle'"
+        [attr.aria-expanded]="helpOpen()"
+        [attr.aria-controls]="uid + '-help'"
+        [attr.aria-label]="'Show help for ' + f.label"
+        (click)="toggleHelp()"
+        title="Show help"
+      >
+        ?
+      </button>
+    }
+  </div>
+
+  <!-- Help panel (revealed by the "?" toggle) -->
+  @if (hasHelp() && helpOpen()) {
+    <p class="field-help" [id]="uid + '-help'" role="note">{{ helpText() }}</p>
+  }
+
+  <!-- Type-appropriate control -->
+  @switch (f.dataType) {
+    @case ('BOOLEAN') {
+      <label class="boolean-control">
+        <input
+          [id]="uid + '-control'"
+          type="checkbox"
+          [checked]="checked()"
+          [disabled]="disabled()"
+          [attr.aria-describedby]="showError ? uid + '-error' : null"
+          (change)="onBooleanToggle($any($event.target).checked)"
+          (blur)="onBlur()"
+        />
+        <span>{{ checked() ? 'Yes' : 'No' }}</span>
+      </label>
+    }
+
+    @case ('DROPDOWN') {
+      <select
+        [id]="uid + '-control'"
+        class="field-control"
+        [value]="stringValue()"
+        [disabled]="disabled()"
+        [attr.aria-invalid]="showError"
+        [attr.aria-describedby]="showError ? uid + '-error' : null"
+        (change)="onValueInput($any($event.target).value)"
+        (blur)="onBlur()"
+      >
+        <option value="" [selected]="stringValue() === ''">Select…</option>
+        @for (opt of options(); track opt) {
+          <option [value]="opt" [selected]="opt === stringValue()">{{ opt }}</option>
+        }
+      </select>
+    }
+
+    @default {
+      <input
+        [id]="uid + '-control'"
+        class="field-control"
+        [type]="inputType(f.dataType)"
+        [attr.inputmode]="f.dataType === 'NUMERIC' ? 'decimal' : null"
+        [value]="stringValue()"
+        [disabled]="disabled()"
+        [attr.aria-invalid]="showError"
+        [attr.aria-describedby]="showError ? uid + '-error' : null"
+        (input)="onValueInput($any($event.target).value)"
+        (blur)="onBlur()"
+      />
+    }
+  }
+
+  <!-- Client-side validation error (identical wording to the server) -->
+  @if (showError) {
+    <p class="field-error" [id]="uid + '-error'" role="alert">{{ errorMessage() }}</p>
+  }
+</div>

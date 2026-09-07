@@ -1,0 +1,76 @@
+<div class="user-statistics">
+  <h1 class="greeting">Team Statistics</h1>
+
+  <app-stats-nav />
+
+  @if (error()) {
+    <div class="card">
+      <p class="stats-error" role="alert">{{ error() }}</p>
+    </div>
+  } @else if (loading() && !stats()) {
+    <div class="card">
+      <p class="stats-note">Loading your team statistics…</p>
+    </div>
+  } @else if (isEmpty()) {
+    <div class="card">
+      <p class="stats-note">
+        No one reports to you yet, so there are no team statistics to show.
+      </p>
+    </div>
+  } @else {
+    <!-- ── Status-by-month stacked bar (R11 → R10.1) ── -->
+    <div class="card">
+      <h2 class="card-heading">Team requests by status, by month</h2>
+      <app-stacked-bar-chart [bars]="monthBars()" />
+    </div>
+
+    <!-- ── Type pie + time-by-type pie, side by side (R10.2, R10.3) ── -->
+    <div class="card">
+      <div class="pie-grid">
+        <div class="pie-cell">
+          <app-pie-chart heading="Team requests by task type" [slices]="typeSlices()" />
+        </div>
+        <div class="pie-cell">
+          <app-pie-chart heading="Recorded time by task type" [slices]="timeSlices()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Per-task-type summary table (R10.4, R11.2) ── -->
+    <div class="card">
+      <h2 class="card-heading">Summary by task type</h2>
+      @if (summary().length === 0) {
+        <p class="stats-note">No requests to summarise.</p>
+      } @else {
+        <div class="table-scroll">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th scope="col" class="col-type">Task Type</th>
+                <th scope="col" class="col-num">Requests</th>
+                @for (status of statuses; track status) {
+                  <th scope="col" class="col-num">{{ status }}</th>
+                }
+                <th scope="col" class="col-dur">Avg New → Triage</th>
+                <th scope="col" class="col-dur">Avg Triage → Complete</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of summary(); track trackByTaskId($index, row)) {
+                <tr>
+                  <td class="col-type">{{ row.taskName }}</td>
+                  <td class="col-num">{{ row.requestCount }}</td>
+                  @for (status of statuses; track status) {
+                    <td class="col-num">{{ statusCount(row, status) }}</td>
+                  }
+                  <td class="col-dur">{{ newToTriageLabel(row) }}</td>
+                  <td class="col-dur">{{ triageToCompleteLabel(row) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>
