@@ -19,7 +19,9 @@
 
 .content-inner {
   width: 100%;
-  max-width: var(--content-max-width);
+  /* No hard cap here: each page decides its own width. Reading-oriented pages
+     (forms, detail) cap themselves at --content-max-width and centre; data
+     pages (Requests, Support queue) opt into the full section width. */
   margin: 0 auto;
   flex: 1;
   animation: fadeIn 0.35s ease;

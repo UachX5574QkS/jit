@@ -51,9 +51,10 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PASSWORD = 'password1'; // R21.6 — every dev account; stored hashed only.
-const TEAM_COUNT = 6; // R21.2 — ≥5.
+// Teams and their task types come from the IT-support catalogue (TEAMS) defined
+// below; TEAM_COUNT is derived from it so the two never drift. Each catalogue
+// team has ≥3 task types and we seed ≥5 members per team, satisfying R21.2.
 const MEMBERS_PER_TEAM = 6; // R21.2 — ≥5 (leader is additionally a member).
-const TASKS_PER_TEAM = 4; // R21.2 — ≥3.
 
 /**
  * Every application table, in FK-safe dependency order (children first). Used by
@@ -149,96 +150,456 @@ const JOURNEYS: readonly Journey[] = [
 ];
 
 /**
- * The nine data-point definitions spanning every data type (R3.1). Each seeded
- * team's tasks draw fields from these so requests exercise all field types.
+ * The reusable data-point catalogue (R3.1, R14). Deliberately spans every one
+ * of the nine data types so requests exercise all field types, while reading
+ * like a real IT service-desk field library. Each entry has a stable `key`
+ * that the task catalogue below references to compose its fields, plus a
+ * representative `sampleValue` used when a task field does not override it.
  */
 interface DataPointSeed {
+  /** Stable key referenced by the task catalogue (not persisted). */
+  readonly key: string;
   readonly name: string;
   readonly dataType:
-    | 'TEXT'
-    | 'EMAIL'
-    | 'DATE'
-    | 'NUMERIC'
-    | 'DATETIME'
-    | 'TIME'
-    | 'BOOLEAN'
-    | 'DROPDOWN'
-    | 'REGEXP';
+    | "TEXT"
+    | "EMAIL"
+    | "DATE"
+    | "NUMERIC"
+    | "DATETIME"
+    | "TIME"
+    | "BOOLEAN"
+    | "DROPDOWN"
+    | "REGEXP";
   readonly description: string;
   readonly defaultHelpText: string;
   readonly regexpPattern?: string;
   readonly defaultOptions?: readonly string[];
-  /** A representative valid value used when seeding request_field_value rows. */
+  /** A representative valid value used when a task field has no override. */
   readonly sampleValue: string;
 }
 
 const DATA_POINTS: readonly DataPointSeed[] = [
   {
-    name: 'Summary',
-    dataType: 'TEXT',
-    description: 'A short summary of the request',
-    defaultHelpText: 'Describe the request in a sentence or two.',
-    sampleValue: 'Laptop will not boot after the latest update.',
+    key: "full_name",
+    name: "Full Name",
+    dataType: "TEXT",
+    description: "The full name of the person the request is about",
+    defaultHelpText: "Enter the person’s first and last name.",
+    sampleValue: "Jordan Smith",
   },
   {
-    name: 'Contact Email',
-    dataType: 'EMAIL',
-    description: 'Best email address to reach the requester',
-    defaultHelpText: 'We will send updates to this address.',
-    sampleValue: 'requester@example.com',
+    key: "user_email",
+    name: "User Email",
+    dataType: "EMAIL",
+    description: "The email address of the affected user or account",
+    defaultHelpText: "We use this to identify the account and send updates.",
+    sampleValue: "jordan.smith@example.com",
   },
   {
-    name: 'Needed By',
-    dataType: 'DATE',
-    description: 'The date the work is needed by',
-    defaultHelpText: 'Pick the required-by date.',
-    sampleValue: '2026-03-15',
+    key: "start_date",
+    name: "Start Date",
+    dataType: "DATE",
+    description: "The date the access or change should take effect",
+    defaultHelpText: "Pick the date this should be actioned.",
+    sampleValue: "2026-04-01",
   },
   {
-    name: 'Affected Users',
-    dataType: 'NUMERIC',
-    description: 'How many people are affected',
-    defaultHelpText: 'Enter a whole number.',
-    sampleValue: '12',
+    key: "affected_users",
+    name: "Affected Users",
+    dataType: "NUMERIC",
+    description: "How many people are impacted by this issue",
+    defaultHelpText: "Enter a whole number.",
+    sampleValue: "1",
   },
   {
-    name: 'Incident Time',
-    dataType: 'DATETIME',
-    description: 'When the incident occurred',
-    defaultHelpText: 'Pick the date and time it happened.',
-    sampleValue: '2026-01-20T09:30:00.000Z',
+    key: "incident_time",
+    name: "Incident Time",
+    dataType: "DATETIME",
+    description: "When the problem was first observed",
+    defaultHelpText: "Pick the date and time the issue started.",
+    sampleValue: "2026-01-20T09:30:00.000Z",
   },
   {
-    name: 'Preferred Callback',
-    dataType: 'TIME',
-    description: 'Preferred time of day for a callback',
-    defaultHelpText: 'Pick a time of day.',
-    sampleValue: '14:30',
+    key: "maintenance_window",
+    name: "Preferred Maintenance Window",
+    dataType: "TIME",
+    description: "Preferred time of day to carry out the work",
+    defaultHelpText: "Pick a time of day for the change.",
+    sampleValue: "22:00",
   },
   {
-    name: 'Business Critical',
-    dataType: 'BOOLEAN',
-    description: 'Whether this is business critical',
-    defaultHelpText: 'Tick if this blocks business operations.',
-    sampleValue: 'true',
+    key: "business_critical",
+    name: "Business Critical",
+    dataType: "BOOLEAN",
+    description: "Whether this blocks business operations",
+    defaultHelpText: "Tick if this is stopping people from working.",
+    sampleValue: "true",
   },
   {
-    name: 'Priority',
-    dataType: 'DROPDOWN',
-    description: 'Requested priority',
-    defaultHelpText: 'Choose a priority level.',
-    defaultOptions: ['Low', 'Medium', 'High', 'Critical'],
-    sampleValue: 'High',
+    key: "priority",
+    name: "Priority",
+    dataType: "DROPDOWN",
+    description: "Requested priority for this request",
+    defaultHelpText: "Choose a priority level.",
+    defaultOptions: ["Low", "Medium", "High", "Critical"],
+    sampleValue: "High",
   },
   {
-    name: 'Reference Code',
-    dataType: 'REGEXP',
-    description: 'An internal reference code (ABC-1234)',
-    defaultHelpText: 'Format: three letters, a dash, four digits.',
-    regexpPattern: '^[A-Z]{3}-[0-9]{4}$',
-    sampleValue: 'REF-4821',
+    key: "asset_tag",
+    name: "Asset Tag",
+    dataType: "REGEXP",
+    description: "The asset tag of the device (e.g. PC-1234)",
+    defaultHelpText: "Format: two/three letters, a dash, four digits.",
+    regexpPattern: "^[A-Z]{2,3}-[0-9]{4}$",
+    sampleValue: "PC-1234",
+  },
+  {
+    key: "username",
+    name: "Account Username",
+    dataType: "TEXT",
+    description: "The login/username of the affected account",
+    defaultHelpText: "Enter the account’s username (not the email).",
+    sampleValue: "jsmith",
+  },
+  {
+    key: "department",
+    name: "Department",
+    dataType: "DROPDOWN",
+    description: "The department the request relates to",
+    defaultHelpText: "Choose the department.",
+    defaultOptions: ["Finance", "Sales", "Engineering", "HR", "Operations", "IT"],
+    sampleValue: "Engineering",
+  },
+  {
+    key: "manager_email",
+    name: "Approving Manager Email",
+    dataType: "EMAIL",
+    description: "The manager who approves this request",
+    defaultHelpText: "We may contact this manager to confirm approval.",
+    sampleValue: "manager@example.com",
+  },
+  {
+    key: "server_name",
+    name: "Server Name",
+    dataType: "TEXT",
+    description: "The hostname of the server involved",
+    defaultHelpText: "Enter the server hostname (e.g. app-prod-01).",
+    sampleValue: "app-prod-01",
+  },
+  {
+    key: "environment",
+    name: "Environment",
+    dataType: "DROPDOWN",
+    description: "The environment the change applies to",
+    defaultHelpText: "Choose the environment.",
+    defaultOptions: ["Development", "Test", "Staging", "Production"],
+    sampleValue: "Production",
+  },
+  {
+    key: "database_name",
+    name: "Database Name",
+    dataType: "TEXT",
+    description: "The database instance or schema involved",
+    defaultHelpText: "Enter the database or schema name.",
+    sampleValue: "ORDERS_PROD",
+  },
+  {
+    key: "permission_level",
+    name: "Permission Level",
+    dataType: "DROPDOWN",
+    description: "The level of access being requested",
+    defaultHelpText: "Choose the access level required.",
+    defaultOptions: ["Read", "Read/Write", "Admin"],
+    sampleValue: "Read/Write",
+  },
+  {
+    key: "error_message",
+    name: "Error Message",
+    dataType: "TEXT",
+    description: "The exact error message seen, if any",
+    defaultHelpText: "Copy the error text or describe what happened.",
+    sampleValue: "Application not responding; screen frozen.",
+  },
+  {
+    key: "cpu_count",
+    name: "vCPU Count",
+    dataType: "NUMERIC",
+    description: "Number of virtual CPUs required",
+    defaultHelpText: "Enter the number of vCPUs.",
+    sampleValue: "4",
   },
 ];
+
+/**
+ * A field specification within a task: which data point it maps to (by key),
+ * whether it is mandatory, and an optional context-specific sample value used
+ * when seeding this task type’s request values (falls back to the data point’s
+ * default sample when omitted).
+ */
+interface TaskFieldSpec {
+  readonly dataPointKey: string;
+  readonly isMandatory: boolean;
+  readonly sampleValue?: string;
+}
+
+/** A task type within a team (a real IT service-desk request type). */
+interface TaskSpec {
+  readonly name: string;
+  readonly fields: readonly TaskFieldSpec[];
+  /** Support notes shown to the support team when working the request. */
+  readonly supportNotes: string;
+}
+
+/** A support team and the catalogue of task types it handles. */
+interface TeamSpec {
+  readonly title: string;
+  readonly description: string;
+  readonly tasks: readonly TaskSpec[];
+}
+
+/**
+ * The seeded IT-support teams and their task catalogues (R21.2). Six teams,
+ * each with several realistic request types whose fields are drawn from the
+ * data-point catalogue above. Field selections vary by task so the data spans
+ * every data type across the dataset while each task reads true-to-life.
+ */
+const TEAMS: readonly TeamSpec[] = [
+  {
+    title: "Service Desk",
+    description: "First-line support for staff: accounts, devices and general IT issues.",
+    tasks: [
+      {
+        name: "Unlock User Account",
+        supportNotes: "Verify identity via security questions before unlocking. Confirm the account is locked, not disabled.",
+        fields: [
+          { dataPointKey: "username", isMandatory: true },
+          { dataPointKey: "user_email", isMandatory: true },
+          { dataPointKey: "business_critical", isMandatory: false },
+          { dataPointKey: "priority", isMandatory: false, sampleValue: "Medium" },
+        ],
+      },
+      {
+        name: "Password Reset",
+        supportNotes: "Confirm the caller’s identity. Issue a temporary password and force change at next logon.",
+        fields: [
+          { dataPointKey: "username", isMandatory: true },
+          { dataPointKey: "user_email", isMandatory: true },
+          { dataPointKey: "priority", isMandatory: false, sampleValue: "Medium" },
+        ],
+      },
+      {
+        name: "PC Hung / Frozen",
+        supportNotes: "Attempt remote reboot first. Capture the asset tag and any error before escalating to desktop support.",
+        fields: [
+          { dataPointKey: "asset_tag", isMandatory: true },
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "error_message", isMandatory: false },
+          { dataPointKey: "incident_time", isMandatory: false },
+          { dataPointKey: "business_critical", isMandatory: false },
+        ],
+      },
+      {
+        name: "Software Installation Request",
+        supportNotes: "Check licensing and manager approval before installing. Deploy via the software centre where possible.",
+        fields: [
+          { dataPointKey: "asset_tag", isMandatory: true },
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "department", isMandatory: false },
+          { dataPointKey: "manager_email", isMandatory: false },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Identity & Access Management",
+    description: "Provisioning, de-provisioning and access for user accounts and groups.",
+    tasks: [
+      {
+        name: "Create User",
+        supportNotes: "Create the account only after manager approval. Apply the standard role template for the department.",
+        fields: [
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "user_email", isMandatory: true },
+          { dataPointKey: "department", isMandatory: true },
+          { dataPointKey: "manager_email", isMandatory: true },
+          { dataPointKey: "start_date", isMandatory: false },
+        ],
+      },
+      {
+        name: "Disable Leaver Account",
+        supportNotes: "Disable (do not delete) on the leaver’s last working day. Preserve the mailbox for 90 days.",
+        fields: [
+          { dataPointKey: "username", isMandatory: true },
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "start_date", isMandatory: true, sampleValue: "2026-04-30" },
+          { dataPointKey: "manager_email", isMandatory: false },
+        ],
+      },
+      {
+        name: "Grant Group Membership",
+        supportNotes: "Confirm the requested group and that manager approval is attached before adding membership.",
+        fields: [
+          { dataPointKey: "username", isMandatory: true },
+          { dataPointKey: "department", isMandatory: true },
+          { dataPointKey: "permission_level", isMandatory: false },
+          { dataPointKey: "manager_email", isMandatory: true },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Database Administration",
+    description: "Care and feeding of database services: availability, access and changes.",
+    tasks: [
+      {
+        name: "Start Database",
+        supportNotes: "Confirm the outage and check for an active change freeze before starting the instance.",
+        fields: [
+          { dataPointKey: "database_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "business_critical", isMandatory: false },
+          { dataPointKey: "incident_time", isMandatory: false },
+        ],
+      },
+      {
+        name: "Grant Permission in Database",
+        supportNotes: "Verify least-privilege. Read/Write and Admin grants in Production require manager approval.",
+        fields: [
+          { dataPointKey: "database_name", isMandatory: true },
+          { dataPointKey: "username", isMandatory: true },
+          { dataPointKey: "permission_level", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "manager_email", isMandatory: false },
+        ],
+      },
+      {
+        name: "Restore Database Backup",
+        supportNotes: "Confirm the restore point and target environment. Never restore over Production without change approval.",
+        fields: [
+          { dataPointKey: "database_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "start_date", isMandatory: false },
+          { dataPointKey: "priority", isMandatory: false, sampleValue: "Critical" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Infrastructure & Servers",
+    description: "Server provisioning, patching and platform changes across environments.",
+    tasks: [
+      {
+        name: "Create Server",
+        supportNotes: "Provision from the approved image. Confirm sizing and environment before building.",
+        fields: [
+          { dataPointKey: "server_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "cpu_count", isMandatory: true },
+          { dataPointKey: "maintenance_window", isMandatory: false },
+          { dataPointKey: "manager_email", isMandatory: false },
+        ],
+      },
+      {
+        name: "Reboot Server",
+        supportNotes: "Schedule within the maintenance window. Notify service owners and confirm health after reboot.",
+        fields: [
+          { dataPointKey: "server_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "maintenance_window", isMandatory: false },
+          { dataPointKey: "business_critical", isMandatory: false },
+        ],
+      },
+      {
+        name: "Extend Disk Space",
+        supportNotes: "Check the volume and current utilisation. Snapshot before extending in Production.",
+        fields: [
+          { dataPointKey: "server_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "affected_users", isMandatory: false },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Network & Connectivity",
+    description: "Connectivity, firewall and remote-access requests and incidents.",
+    tasks: [
+      {
+        name: "Open Firewall Port",
+        supportNotes: "Requires security review. Confirm source, destination and business justification before opening.",
+        fields: [
+          { dataPointKey: "server_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "manager_email", isMandatory: true },
+          { dataPointKey: "business_critical", isMandatory: false },
+        ],
+      },
+      {
+        name: "VPN Access Request",
+        supportNotes: "Confirm manager approval and that the device is corporate-managed before granting VPN.",
+        fields: [
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "user_email", isMandatory: true },
+          { dataPointKey: "department", isMandatory: false },
+          { dataPointKey: "manager_email", isMandatory: true },
+        ],
+      },
+      {
+        name: "Investigate Network Outage",
+        supportNotes: "Capture scope and start time. Check monitoring and escalate to on-call if multiple sites affected.",
+        fields: [
+          { dataPointKey: "affected_users", isMandatory: true, sampleValue: "45" },
+          { dataPointKey: "incident_time", isMandatory: true },
+          { dataPointKey: "business_critical", isMandatory: false },
+          { dataPointKey: "priority", isMandatory: false, sampleValue: "Critical" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Applications Support",
+    description: "Support and change requests for business applications.",
+    tasks: [
+      {
+        name: "Application Error Investigation",
+        supportNotes: "Reproduce where possible. Capture the exact error and time, and check recent releases.",
+        fields: [
+          { dataPointKey: "error_message", isMandatory: true },
+          { dataPointKey: "incident_time", isMandatory: true },
+          { dataPointKey: "affected_users", isMandatory: false },
+          { dataPointKey: "business_critical", isMandatory: false },
+        ],
+      },
+      {
+        name: "New Application Access",
+        supportNotes: "Confirm licence availability and manager approval, then assign the appropriate role.",
+        fields: [
+          { dataPointKey: "full_name", isMandatory: true },
+          { dataPointKey: "user_email", isMandatory: true },
+          { dataPointKey: "permission_level", isMandatory: false },
+          { dataPointKey: "manager_email", isMandatory: true },
+        ],
+      },
+      {
+        name: "Schedule Application Deployment",
+        supportNotes: "Book the change window and confirm rollback plan before deploying to Production.",
+        fields: [
+          { dataPointKey: "server_name", isMandatory: true },
+          { dataPointKey: "environment", isMandatory: true },
+          { dataPointKey: "maintenance_window", isMandatory: true },
+          { dataPointKey: "start_date", isMandatory: false },
+        ],
+      },
+    ],
+  },
+];
+
+/** Number of teams to seed (derived from the catalogue so they never drift). */
+const TEAM_COUNT = TEAMS.length; // R21.2 — ≥5.
+
+/** Total task types across all teams (used for a sanity assertion). */
+const TOTAL_TASK_TYPES = TEAMS.reduce((n, team) => n + team.tasks.length, 0);
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Small helpers
@@ -380,6 +741,8 @@ async function insertDataPoints(tx: Queryable): Promise<SeededDataPoint[]> {
 interface SeededTaskField {
   readonly id: number;
   readonly dataPoint: SeededDataPoint;
+  /** The value seeded into request_field_value for this field (task-specific). */
+  readonly sampleValue: string;
 }
 
 interface SeededTask {
@@ -391,19 +754,21 @@ interface SeededTask {
 }
 
 /**
- * Create a task with one current task_version and a set of task_fields drawn
- * from the seeded data points (R16). The first field is always mandatory so the
- * request has at least one required value.
+ * Create a task type from its catalogue {@link TaskSpec}: one current
+ * task_version (carrying the task’s support notes) and its ordered task_fields,
+ * each mapped to a data point by key with the spec’s mandatory flag (R16). At
+ * least one field per task is mandatory by construction of the catalogue, so
+ * every request has a required value.
  */
 async function insertTask(
   tx: Queryable,
   teamId: number,
-  name: string,
-  dataPoints: readonly SeededDataPoint[],
+  spec: TaskSpec,
+  dpByKey: ReadonlyMap<string, SeededDataPoint>,
 ): Promise<SeededTask> {
   const taskRow = await one<{ id: string | number }>(
     `INSERT INTO task (team_id, name) VALUES ($1, $2) RETURNING id`,
-    [teamId, name],
+    [teamId, spec.name],
     tx,
   );
   const taskId = Number(taskRow!.id);
@@ -412,23 +777,33 @@ async function insertTask(
     `INSERT INTO task_version (task_id, version_no, support_notes)
      VALUES ($1, $2, $3)
      RETURNING id`,
-    [taskId, 1, `Support notes for ${name}: verify identity before proceeding.`],
+    [taskId, 1, spec.supportNotes],
     tx,
   );
   const versionId = Number(versionRow!.id);
 
   const fields: SeededTaskField[] = [];
   let order = 1;
-  for (const dp of dataPoints) {
+  for (const fieldSpec of spec.fields) {
+    const dp = dpByKey.get(fieldSpec.dataPointKey);
+    if (!dp) {
+      throw new Error(
+        `Task "${spec.name}" references unknown data point key "${fieldSpec.dataPointKey}"`,
+      );
+    }
     const fieldRow = await one<{ id: string | number }>(
       `INSERT INTO task_field
          (task_version_id, data_point_id, field_order, is_mandatory, options_override)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
-      [versionId, dp.id, order, order === 1, null],
+      [versionId, dp.id, order, fieldSpec.isMandatory, null],
       tx,
     );
-    fields.push({ id: Number(fieldRow!.id), dataPoint: dp });
+    fields.push({
+      id: Number(fieldRow!.id),
+      dataPoint: dp,
+      sampleValue: fieldSpec.sampleValue ?? dp.sampleValue,
+    });
     order += 1;
   }
 
@@ -438,7 +813,7 @@ async function insertTask(
     tx,
   );
 
-  return { id: taskId, name, teamId, versionId, fields };
+  return { id: taskId, name: spec.name, teamId, versionId, fields };
 }
 
 let referenceSeq = 0;
@@ -523,22 +898,33 @@ export async function runSeed(): Promise<SeedResult> {
     await addAdmin(tx, admin.id);
 
     const dataPoints = await insertDataPoints(tx);
+    // Key -> seeded data point, so the task catalogue can compose fields by key.
+    const dpByKey = new Map<string, SeededDataPoint>(
+      dataPoints.map((dp) => [dp.key, dp]),
+    );
 
     // Pools we accumulate across teams for cross-team request raising (R21.4).
     const allTeams: SeededTask[] = []; // flattened task list across teams
+    // Seeded team ids, in catalogue order, so request raising can spread across
+    // DIFFERENT teams even though teams have varying task counts.
+    const teamIds: number[] = [];
+    // Each team's task types (parallel to teamIds) for cross-team request picks.
+    const tasksByTeam: SeededTask[][] = [];
     const requesterUsers: SeededUser[] = []; // users who raise requests
     const teamMembersByTeam = new Map<number, SeededUser[]>();
     let areaManagerAssigned = false;
 
     // ── R21.2 / R21.3: teams, leaders, members, sub-managers, users ──────────
     for (let t = 0; t < TEAM_COUNT; t += 1) {
+      const teamSpec = TEAMS[t]!;
       const leader = await insertUser(tx, passwordHash, admin.id);
       const teamId = await insertTeam(
         tx,
-        `Support Team ${t + 1}`,
-        `Handles category ${t + 1} requests.`,
+        teamSpec.title,
+        teamSpec.description,
         leader.id,
       );
+      teamIds.push(teamId);
       const members: SeededUser[] = [leader];
       await addTeamMember(tx, teamId, leader.id);
 
@@ -573,22 +959,15 @@ export async function runSeed(): Promise<SeedResult> {
       }
       teamMembersByTeam.set(teamId, members);
 
-      // R21.2: at least 3 tasks per team, versioned with typed fields.
-      for (let k = 0; k < TASKS_PER_TEAM; k += 1) {
-        // Rotate the data-point window so tasks differ but every type is used.
-        const offset = k % dataPoints.length;
-        const chosen = [
-          ...dataPoints.slice(offset),
-          ...dataPoints.slice(0, offset),
-        ].slice(0, 5);
-        const task = await insertTask(
-          tx,
-          teamId,
-          `Team ${t + 1} Task ${k + 1}`,
-          chosen,
-        );
+      // R21.2: the team's catalogue task types (each >=3), versioned with their
+      // typed fields and the task's support notes.
+      const teamTasks: SeededTask[] = [];
+      for (const taskSpec of teamSpec.tasks) {
+        const task = await insertTask(tx, teamId, taskSpec, dpByKey);
         allTeams.push(task);
+        teamTasks.push(task);
       }
+      tasksByTeam.push(teamTasks);
     }
 
     // ── R21.4 / R21.5: requests across teams & types, spanning all routes ────
@@ -597,21 +976,22 @@ export async function runSeed(): Promise<SeedResult> {
     let statusChangeCount = 0;
 
     // Give each requester several requests spanning DIFFERENT teams and task
-    // types (R21.4). `allTeams` is grouped by team (TASKS_PER_TEAM tasks per
-    // team in sequence), so we stride by TASKS_PER_TEAM to hop into a different
-    // team on each of a user's requests, and add a per-user offset so users draw
-    // from different tasks. Journeys advance globally so all routes get run.
+    // types (R21.4). Teams and their task lists are tracked separately, so each
+    // of a user's requests targets a different team and rotates through that
+    // team's task types. Journeys advance globally so all routes get run.
     let journeyIdx = 0;
     let userIdx = 0;
     const REQUESTS_PER_USER = 4; // "several", each in a different team (R21.4).
-    const teamStride = TASKS_PER_TEAM; // jumps one whole team per step
 
     for (const requester of requesterUsers) {
       for (let r = 0; r < REQUESTS_PER_USER; r += 1) {
-        // Cross-team spread: base at the user's offset, then advance a full team
-        // per request so a single user's four requests land in four teams.
-        const pick = (userIdx + r * teamStride + (r % teamStride)) % allTeams.length;
-        const task = allTeams[pick]!;
+        // Cross-team spread: pick a DIFFERENT team per request (advancing one
+        // team per step from a per-user offset), then a task within that team
+        // (rotating so users draw varied task types). Teams have varying task
+        // counts, so we index each team's own task list (R21.4).
+        const teamPos = (userIdx + r) % teamIds.length;
+        const teamTasks = tasksByTeam[teamPos]!;
+        const task = teamTasks[(userIdx + r) % teamTasks.length]!;
         const journey = JOURNEYS[journeyIdx % JOURNEYS.length]!;
         journeyIdx += 1;
 
@@ -661,7 +1041,7 @@ export async function runSeed(): Promise<SeedResult> {
           await query(
             `INSERT INTO request_field_value (request_id, task_field_id, value)
              VALUES ($1, $2, $3)`,
-            [requestId, field.id, field.dataPoint.sampleValue],
+            [requestId, field.id, field.sampleValue],
             tx,
           );
         }
@@ -730,6 +1110,13 @@ export async function runSeed(): Promise<SeedResult> {
         }
       }
       userIdx += 1;
+    }
+
+    // Sanity: every catalogue task type was created (teams x their tasks).
+    if (allTeams.length !== TOTAL_TASK_TYPES) {
+      throw new Error(
+        `Seed created ${allTeams.length} task types but the catalogue defines ${TOTAL_TASK_TYPES}`,
+      );
     }
 
     // ── R21.5 assertion: confirm every state-machine route was exercised ─────

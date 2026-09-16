@@ -22,15 +22,19 @@ export interface ManagerGraphLoader {
   load(): Promise<ManagerGraph>;
 }
 
-/** Row shape for the manager-edge read (`app_user.manager_id` inverted). */
+/**
+ * Row shape for the manager-edge read (`app_user.manager_id` inverted). The id
+ * columns are bigint, which node-postgres returns as strings; they are coerced
+ * to numbers when the graph is built so the `UserId = number` contract holds.
+ */
 interface ManagerEdgeRow {
-  readonly user_id: UserId;
-  readonly manager_id: UserId;
+  readonly user_id: string | number;
+  readonly manager_id: string | number;
 }
 
-/** Row shape for the area-manager lookup read. */
+/** Row shape for the area-manager lookup read (bigint id -> string at runtime). */
 interface AreaManagerRow {
-  readonly user_id: UserId;
+  readonly user_id: string | number;
 }
 
 /**
@@ -65,19 +69,27 @@ export class DbManagerGraphLoader implements ManagerGraphLoader {
       ),
     ]);
 
-    // Invert the edges into a direct-reports adjacency keyed by manager.
+    // Invert the edges into a direct-reports adjacency keyed by manager, and
+    // record each user's manager for the "My Team" root lookup (R4.3).
     const directReports = new Map<UserId, Set<UserId>>();
-    for (const { user_id, manager_id } of edgeRows) {
-      let reports = directReports.get(manager_id);
+    const managerOf = new Map<UserId, UserId>();
+    for (const edge of edgeRows) {
+      // Coerce bigint-as-string ids to numbers so the graph keys/values match
+      // the numeric UserId the resolver is called with (a string key would make
+      // directReports.get(numericId) miss and yield an empty hierarchy).
+      const userId = Number(edge.user_id);
+      const managerId = Number(edge.manager_id);
+      let reports = directReports.get(managerId);
       if (!reports) {
         reports = new Set<UserId>();
-        directReports.set(manager_id, reports);
+        directReports.set(managerId, reports);
       }
-      reports.add(user_id);
+      reports.add(userId);
+      managerOf.set(userId, managerId);
     }
 
-    const areaManagerIds = new Set<UserId>(areaRows.map((r) => r.user_id));
+    const areaManagerIds = new Set<UserId>(areaRows.map((r) => Number(r.user_id)));
 
-    return { directReports, areaManagerIds };
+    return { directReports, managerOf, areaManagerIds };
   }
 }

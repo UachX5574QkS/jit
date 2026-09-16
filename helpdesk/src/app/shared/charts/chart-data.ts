@@ -10,8 +10,42 @@
  * view models and hands them in.
  */
 
-/** The default purple / purple-light series palette from the UI spec. */
-export const CHART_COLORS = ['#5A287D', '#7A4A9E', '#9B6BBF', '#B98FD6', '#D7BCEA'] as const;
+/**
+ * A CATEGORICAL fallback palette for stacked-bar series that have no explicit
+ * per-segment colour. The status-by-month charts pass explicit STATUS_COLORS,
+ * but a broad set of distinct hues here means any other multi-series bar is
+ * still legible (rather than five shades of one colour).
+ */
+export const CHART_COLORS = [
+  '#5A287D', // purple
+  '#23A656', // green
+  '#F2A900', // amber
+  '#2F6FED', // blue
+  '#D5281B', // red
+  '#0FB5AE', // teal
+  '#B98FD6', // light purple
+  '#5B5B6E', // slate
+] as const;
+
+/**
+ * Distinct, meaningful colours per request lifecycle status, so a stacked
+ * status-by-month bar is readable (each status is its own hue, and the SAME
+ * status is the SAME colour across every bar). Chosen for contrast against each
+ * other and rough semantic fit (green = complete, red = rejected, grey =
+ * cancelled, amber/orange = paused/blocked, blues/purples = in-flight).
+ */
+export const STATUS_COLORS: Readonly<Record<string, string>> = {
+  NEW: '#2F6FED',       // blue — just arrived
+  TRIAGE: '#7A4A9E',    // purple — being assessed
+  ACCEPTED: '#0FB5AE',  // teal — accepted into the queue
+  ASSIGNED: '#3D5AFE',  // indigo — assigned to a member
+  ACTIVE: '#5A287D',    // deep purple — actively worked
+  PAUSED: '#F2A900',    // amber — paused
+  BLOCKED: '#E8710A',   // orange — blocked
+  REJECTED: '#D5281B',  // red — rejected
+  CANCELLED: '#9B9BAE', // grey — cancelled
+  COMPLETE: '#23A656',  // green — done
+};
 
 /** Colours for pie slices — the purple family, extended with the accent tokens. */
 export const PIE_COLORS = [

@@ -26,7 +26,10 @@ export interface UserIdentityLoader {
 
 /** Row shape for the core `app_user` lookup (no `password_hash`). */
 interface AppUserRow {
-  readonly id: number;
+  // `app_user.id` is a bigint; node-postgres returns bigint columns as
+  // strings (to avoid precision loss), so the raw row id is a string at
+  // runtime. It is coerced to a number when the identity is assembled below.
+  readonly id: number | string;
   readonly username: string;
   readonly first_name: string;
   readonly surname: string;
@@ -35,7 +38,9 @@ interface AppUserRow {
 
 /** Row shape for team-id membership/leadership lookups. */
 interface TeamIdRow {
-  readonly team_id: number;
+  // Team id columns are bigint → returned as strings by node-postgres; coerced
+  // to numbers when the identity is assembled below.
+  readonly team_id: number | string;
 }
 
 /** Row shape for the admin-group existence check. */
@@ -88,13 +93,17 @@ export class DbUserIdentityLoader implements UserIdentityLoader {
     ]);
 
     return {
-      id: user.id,
+      // Coerce bigint-as-string ids to numbers so the `number` contract on
+      // UserIdentity/CurrentUser holds at runtime; downstream code compares
+      // these with numeric ids using strict equality (e.g. the request-detail
+      // raiser/visibility check), which silently fails on a string id.
+      id: Number(user.id),
       username: user.username,
       firstName: user.first_name,
       surname: user.surname,
       timezone: user.timezone,
-      teamsLed: ledRows.map((r) => r.team_id),
-      teamsMemberOf: memberRows.map((r) => r.team_id),
+      teamsLed: ledRows.map((r) => Number(r.team_id)),
+      teamsMemberOf: memberRows.map((r) => Number(r.team_id)),
       isAdmin: adminRows[0]?.is_admin ?? false,
     };
   }

@@ -152,7 +152,21 @@ export class RetiredDataPointError extends Error {
 }
 
 /** The narrow contract the route handlers depend on. */
+/** A selectable data point for the task field-editor drop-down (R14/R16.2). */
+export interface DataPointOption {
+  readonly id: number;
+  readonly name: string;
+  readonly dataType: string;
+  readonly description: string | null;
+}
+
 export interface TaskLeaderStore {
+  /**
+   * List the ACTIVE (non-retired) data points a leader may add as task fields
+   * (R16.2). Ordered by name. Retired points are excluded so they can't be
+   * chosen for a new/edited task version.
+   */
+  listActiveDataPoints(): Promise<DataPointOption[]>;
   /**
    * Resolve the team that owns a task (for the leader-only authorisation check
    * on edit/retire, R16.1). Returns `null` when the task does not exist.
@@ -244,6 +258,30 @@ export class DbTaskLeaderStore implements TaskLeaderStore {
     private readonly audit: AuditWriter = new AuditWriter(),
     private readonly runTransaction: TransactionRunner = defaultTransactionRunner,
   ) {}
+
+  async listActiveDataPoints(): Promise<DataPointOption[]> {
+    return this.runTransaction(async (tx) => {
+      const rows = await many<{
+        id: string | number;
+        name: string;
+        data_type: string;
+        description: string | null;
+      }>(
+        `SELECT id, name, data_type, description
+           FROM data_point
+          WHERE is_retired = false
+          ORDER BY name ASC, id ASC`,
+        [],
+        tx,
+      );
+      return rows.map((r) => ({
+        id: Number(r.id),
+        name: r.name,
+        dataType: r.data_type,
+        description: r.description,
+      }));
+    });
+  }
 
   async findTeamIdForTask(taskId: number): Promise<number | null> {
     // Routed through the transaction runner so the read uses the same queryable

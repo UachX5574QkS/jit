@@ -248,15 +248,16 @@ describe('SupportQueue', () => {
     httpMock.verify();
   });
 
-  it('renders the "Updated" indicator only when updatedSinceLastSeen is true (R7.5–7.6)', () => {
+  it('highlights the row when updatedSinceLastSeen is true (R7.5–7.6)', () => {
     const fixture = create([
       row({ id: 1, updatedSinceLastSeen: true }),
       row({ id: 2, updatedSinceLastSeen: false }),
     ]);
     const el = fixture.nativeElement as HTMLElement;
-    const pills = el.querySelectorAll('.updated-pill');
-    expect(pills.length).toBe(1);
-    expect(pills[0].textContent?.trim()).toBe('Updated');
+    const rows = el.querySelectorAll('tr.request-row');
+    expect(rows[0].classList.contains('is-updated')).toBe(true);
+    expect(rows[1].classList.contains('is-updated')).toBe(false);
+    expect(el.querySelectorAll('.updated-pill').length).toBe(0);
     httpMock.verify();
   });
 

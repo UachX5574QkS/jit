@@ -36,8 +36,10 @@ function headerRow(overrides: Partial<Record<string, unknown>> = {}) {
     version_no: 3,
     title: 'Toner low',
     raised_by_id: 100,
+    raised_by_name: 'Pat Raiser',
     team_id: 7,
     assigned_member_id: null,
+    assigned_member_name: null,
     status: 'NEW',
     jira_number: null,
     estimated_start_date: null,
@@ -74,6 +76,7 @@ function noteRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 1,
     author_id: 100,
+    author_name: 'Pat Author',
     is_internal: false,
     body: 'External note',
     created_at: new Date('2026-02-01T09:30:00.000Z'),
@@ -91,6 +94,7 @@ function auditRow(overrides: Partial<Record<string, unknown>> = {}) {
     old_value: null,
     new_value: 'NEW',
     changed_by_id: 100,
+    changed_by_name: 'Pat Actor',
     changed_at: new Date('2026-02-01T09:00:00.000Z'),
     ...overrides,
   };
@@ -140,8 +144,8 @@ describe('DbRequestDetailStore.getDetail — full assembly (R5.1, R17.4)', () =>
       if (text.includes('FROM task_field tf')) {
         return [fieldRow({ task_field_id: 1, value: 'Toner low' })];
       }
-      if (text.includes('author_id, is_internal, body')) return [noteRow()];
-      if (text.includes('entity_type, entity_id, field_name')) return [auditRow()];
+      if (text.includes('FROM request_note n')) return [noteRow()];
+      if (text.includes('FROM audit_entry ae')) return [auditRow()];
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
       return [];
     });
@@ -187,8 +191,8 @@ describe('DbRequestDetailStore.getDetail — full assembly (R5.1, R17.4)', () =>
           }),
         ];
       }
-      if (text.includes('author_id, is_internal, body')) return [];
-      if (text.includes('entity_type, entity_id, field_name')) return [];
+      if (text.includes('FROM request_note n')) return [];
+      if (text.includes('FROM audit_entry ae')) return [];
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
       return [];
     });
@@ -205,10 +209,10 @@ describe('DbRequestDetailStore.getDetail — internal exclusion (R5.1, R17.4, R7
       if (text.includes('FROM request r')) return [headerRow()];
       if (text.includes('FROM task_field tf')) return [fieldRow()];
       // Support query has NO is_internal filter → return both notes.
-      if (text.includes('author_id, is_internal, body')) {
+      if (text.includes('FROM request_note n')) {
         return [noteRow({ id: 1, is_internal: false }), noteRow({ id: 2, is_internal: true, body: 'Internal note' })];
       }
-      if (text.includes('entity_type, entity_id, field_name')) {
+      if (text.includes('FROM audit_entry ae')) {
         return [auditRow({ id: 1, entity_type: 'request' }), auditRow({ id: 2, entity_type: 'request_note', entity_id: 2, field_name: 'body' })];
       }
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
@@ -218,13 +222,13 @@ describe('DbRequestDetailStore.getDetail — internal exclusion (R5.1, R17.4, R7
     const detail = await store.getDetail(555, supportViewer);
 
     // The support notes query must NOT restrict to non-internal notes.
-    const notesQuery = callWith(calls, 'author_id, is_internal, body');
+    const notesQuery = callWith(calls, 'FROM request_note n');
     assert.ok(notesQuery);
-    assert.equal(notesQuery.text.includes('is_internal = false'), false);
+    assert.equal(notesQuery.text.includes('n.is_internal = false'), false);
     // The support audit query must NOT restrict the note subquery to non-internal.
-    const auditQuery = callWith(calls, 'entity_type, entity_id, field_name');
+    const auditQuery = callWith(calls, 'FROM audit_entry ae');
     assert.ok(auditQuery);
-    assert.equal(auditQuery.text.includes('is_internal = false'), false);
+    assert.equal(auditQuery.text.includes('n.is_internal = false'), false);
 
     // The internal note and its audit entry are visible to support.
     assert.ok(detail.notes.some((n) => n.isInternal && n.body === 'Internal note'));
@@ -236,11 +240,11 @@ describe('DbRequestDetailStore.getDetail — internal exclusion (R5.1, R17.4, R7
       if (text.includes('FROM request r')) return [headerRow()];
       if (text.includes('FROM task_field tf')) return [fieldRow()];
       // Non-support query restricts to non-internal → the DB returns only those.
-      if (text.includes('author_id, is_internal, body')) {
-        assert.ok(text.includes('is_internal = false'), 'non-support notes query filters internal');
+      if (text.includes('FROM request_note n')) {
+        assert.ok(text.includes('n.is_internal = false'), 'non-support notes query filters internal');
         return [noteRow({ id: 1, is_internal: false })];
       }
-      if (text.includes('entity_type, entity_id, field_name')) {
+      if (text.includes('FROM audit_entry ae')) {
         assert.ok(text.includes('is_internal = false'), 'non-support audit query filters internal-note entries');
         return [auditRow({ id: 1, entity_type: 'request' })];
       }
@@ -256,7 +260,7 @@ describe('DbRequestDetailStore.getDetail — internal exclusion (R5.1, R17.4, R7
     assert.ok(detail.auditTrail.every((a) => a.entityType !== 'request_note' || a.newValue !== 'Internal note'));
 
     // The non-support notes/audit queries carried the internal filter.
-    assert.ok(callWith(calls, 'is_internal = false'));
+    assert.ok(callWith(calls, 'n.is_internal = false'));
   });
 });
 
@@ -265,8 +269,8 @@ describe('DbRequestDetailStore.getDetail — last_seen upsert (R5.2)', () => {
     const { store, calls } = makeStore((text) => {
       if (text.includes('FROM request r')) return [headerRow()];
       if (text.includes('FROM task_field tf')) return [fieldRow()];
-      if (text.includes('author_id, is_internal, body')) return [];
-      if (text.includes('entity_type, entity_id, field_name')) return [];
+      if (text.includes('FROM request_note n')) return [];
+      if (text.includes('FROM audit_entry ae')) return [];
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
       return [];
     });
@@ -298,8 +302,8 @@ describe('DbRequestDetailStore.getDetail — visibility', () => {
     const { store } = makeStore((text) => {
       if (text.includes('FROM request r')) return [headerRow({ raised_by_id: 100 })];
       if (text.includes('FROM task_field tf')) return [];
-      if (text.includes('author_id, is_internal, body')) return [];
-      if (text.includes('entity_type, entity_id, field_name')) return [];
+      if (text.includes('FROM request_note n')) return [];
+      if (text.includes('FROM audit_entry ae')) return [];
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
       return [];
     });
@@ -313,8 +317,8 @@ describe('DbRequestDetailStore.getDetail — visibility', () => {
       if (text.includes('FROM request r')) return [headerRow({ raised_by_id: 100 })];
       if (text.includes('WITH RECURSIVE chain')) return [{ visible: true }];
       if (text.includes('FROM task_field tf')) return [];
-      if (text.includes('author_id, is_internal, body')) return [];
-      if (text.includes('entity_type, entity_id, field_name')) return [];
+      if (text.includes('FROM request_note n')) return [];
+      if (text.includes('FROM audit_entry ae')) return [];
       if (text.includes('INSERT INTO request_last_seen')) return [{ id: 1 }];
       return [];
     });

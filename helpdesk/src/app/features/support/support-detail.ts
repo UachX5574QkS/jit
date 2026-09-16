@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { auditFieldLabel } from '../../shared/audit-labels';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiError } from '../../core/http/api-error';
@@ -688,6 +689,11 @@ export class SupportDetail {
   /** Go back to the Support queue. */
   protected back(): void {
     void this.router.navigate(['/support']);
+  }
+
+  /** A user-facing title for an audit entry's raw field name (hides internal column names). */
+  protected fieldLabel(fieldName: string): string {
+    return auditFieldLabel(fieldName);
   }
 
   /** Stable trackBy for note / audit loops. */

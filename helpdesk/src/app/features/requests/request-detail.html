@@ -78,7 +78,7 @@
         </div>
         <div class="info-row">
           <dt>Assigned To</dt>
-          <dd>{{ d.assignedMemberId ? 'Member #' + d.assignedMemberId : 'Unassigned' }}</dd>
+          <dd>{{ d.assignedMemberId ? (d.assignedMemberName || 'Member #' + d.assignedMemberId) : 'Unassigned' }}</dd>
         </div>
         <div class="info-row">
           <dt>Date Raised</dt>
@@ -170,7 +170,7 @@
           @for (note of externalNotes(); track trackById($index, note)) {
             <li class="note-item">
               <div class="note-meta">
-                <span class="note-author">Member #{{ note.authorId }}</span>
+                <span class="note-author">{{ note.authorName || 'Member #' + note.authorId }}</span>
                 <span class="note-time">{{ note.createdAt | localDate: 'datetime' }}</span>
               </div>
               <p class="note-body">{{ note.body }}</p>
@@ -213,15 +213,15 @@
           @for (entry of auditTrail(); track trackById($index, entry)) {
             <li class="audit-item">
               <div class="audit-meta">
-                <span class="audit-field">{{ entry.fieldName }}</span>
+                <span class="audit-field">{{ fieldLabel(entry.fieldName) }}</span>
                 <span class="audit-time">{{ entry.changedAt | localDate: 'datetime' }}</span>
               </div>
               <p class="audit-change">
-                <span class="audit-old">{{ entry.oldValue ?? '—' }}</span>
+                <span class="audit-old">{{ entry.oldDisplay ?? entry.oldValue ?? '—' }}</span>
                 <span class="audit-arrow" aria-hidden="true">→</span>
-                <span class="audit-new">{{ entry.newValue ?? '—' }}</span>
+                <span class="audit-new">{{ entry.newDisplay ?? entry.newValue ?? '—' }}</span>
               </p>
-              <p class="audit-by">Changed by Member #{{ entry.changedById }}</p>
+              <p class="audit-by">Changed by {{ entry.changedByName || 'Member #' + entry.changedById }}</p>
             </li>
           }
         </ul>

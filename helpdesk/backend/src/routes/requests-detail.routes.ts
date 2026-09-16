@@ -62,6 +62,7 @@ export interface RequestFieldJson {
 export interface RequestNoteJson {
   readonly id: number;
   readonly authorId: number;
+  readonly authorName: string;
   readonly isInternal: boolean;
   readonly body: string;
   readonly createdAt: string;
@@ -74,7 +75,10 @@ export interface AuditEntryJson {
   readonly fieldName: string;
   readonly oldValue: string | null;
   readonly newValue: string | null;
+  readonly oldDisplay: string | null;
+  readonly newDisplay: string | null;
   readonly changedById: number;
+  readonly changedByName: string;
   readonly changedAt: string;
 }
 
@@ -87,8 +91,10 @@ export interface RequestDetailJson {
   readonly versionNo: number;
   readonly title: string;
   readonly raisedById: number;
+  readonly raisedByName: string;
   readonly teamId: number;
   readonly assignedMemberId: number | null;
+  readonly assignedMemberName: string | null;
   readonly status: string;
   readonly jiraNumber: string | null;
   readonly estimatedStartDate: string | null;
@@ -120,6 +126,7 @@ function serializeNote(n: RequestNoteView): RequestNoteJson {
   return {
     id: n.id,
     authorId: n.authorId,
+    authorName: n.authorName,
     isInternal: n.isInternal,
     body: n.body,
     createdAt: n.createdAt,
@@ -134,7 +141,10 @@ function serializeAudit(a: AuditEntryView): AuditEntryJson {
     fieldName: a.fieldName,
     oldValue: a.oldValue,
     newValue: a.newValue,
+    oldDisplay: a.oldDisplay,
+    newDisplay: a.newDisplay,
     changedById: a.changedById,
+    changedByName: a.changedByName,
     changedAt: a.changedAt,
   };
 }
@@ -150,8 +160,10 @@ export function serializeRequestDetail(detail: RequestDetailView): RequestDetail
     versionNo: detail.versionNo,
     title: detail.title,
     raisedById: detail.raisedById,
+    raisedByName: detail.raisedByName,
     teamId: detail.teamId,
     assignedMemberId: detail.assignedMemberId,
+    assignedMemberName: detail.assignedMemberName,
     status: detail.status,
     jiraNumber: detail.jiraNumber,
     estimatedStartDate: detail.estimatedStartDate,

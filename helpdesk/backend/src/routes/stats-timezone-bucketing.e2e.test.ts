@@ -261,6 +261,7 @@ function fakeGraphLoader(managerId: number, raiserId: number): ManagerGraphLoade
         directReports: new Map<UserId, Set<UserId>>([
           [managerId, new Set<UserId>([raiserId])],
         ]),
+        managerOf: new Map<UserId, UserId>([[raiserId, managerId]]),
         areaManagerIds: new Set<UserId>(),
       };
     },

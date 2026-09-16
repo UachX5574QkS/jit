@@ -18,6 +18,46 @@
   gap: 12px;
 }
 
+/* Text size (accessibility) drop-down ---------------------------------- */
+.text-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.text-size-icon {
+  color: var(--ink-3);
+  flex: 0 0 auto;
+}
+
+.text-size-select {
+  appearance: auto;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0 2px;
+  min-height: 24px;
+}
+
+.text-size-select:focus {
+  outline: none;
+}
+
+.text-size:focus-within {
+  border-color: var(--color-nw-purple);
+  box-shadow: 0 0 0 3px rgba(90, 40, 125, 0.18);
+}
+
 /* Search --------------------------------------------------------------- */
 .search {
   position: relative;

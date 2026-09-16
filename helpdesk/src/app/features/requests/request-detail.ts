@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { auditFieldLabel } from '../../shared/audit-labels';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CurrentUserService } from '../../core/auth/current-user.service';
@@ -397,6 +398,11 @@ export class RequestDetail {
   /** Go back to the Requests list. */
   protected back(): void {
     void this.router.navigate(['/requests']);
+  }
+
+  /** A user-facing title for an audit entry's raw field name (hides internal column names). */
+  protected fieldLabel(fieldName: string): string {
+    return auditFieldLabel(fieldName);
   }
 
   /** Stable trackBy for note / audit / field loops. */

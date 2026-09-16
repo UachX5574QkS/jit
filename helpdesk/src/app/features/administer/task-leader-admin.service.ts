@@ -39,6 +39,14 @@ export interface LeadableTeam {
   readonly title: string;
 }
 
+/** A selectable data point for the field-editor drop-down (`GET /api/team-leader/data-points`). */
+export interface DataPointOption {
+  readonly id: number;
+  readonly name: string;
+  readonly dataType: DataType;
+  readonly description: string | null;
+}
+
 /** A non-retired task in a team (`GET /api/teams/:id/tasks?active=true`, R16.5). */
 export interface ActiveTask {
   readonly id: number;
@@ -154,6 +162,17 @@ export class TaskLeaderAdminService {
   /** A task's current version, used to prefill the edit form (R16.5). */
   getCurrentVersion(taskId: number): Observable<CurrentVersion> {
     return this.http.get<CurrentVersion>(`${this.base}/tasks/${taskId}/current-version`);
+  }
+
+  /**
+   * The ACTIVE data-point catalogue a leader may add as task fields
+   * (`GET /api/team-leader/data-points`, R16.2). Used to populate the field
+   * drop-down so a leader picks a data point by NAME rather than typing an id.
+   */
+  listDataPoints(): Observable<DataPointOption[]> {
+    return this.http
+      .get<{ dataPoints: DataPointOption[] }>(`${this.base}/team-leader/data-points`)
+      .pipe(map((res) => res.dataPoints));
   }
 
   /** Create a task and its first version (R16.1, R16.2). */

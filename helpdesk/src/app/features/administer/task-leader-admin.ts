@@ -6,6 +6,7 @@ import { CurrentUserService } from '../../core/auth/current-user.service';
 import {
   TaskLeaderAdminService,
   type ActiveTask,
+  type DataPointOption,
   type CreateTaskRequest,
   type CreateVersionRequest,
   type CurrentVersion,
@@ -107,6 +108,8 @@ export class TaskLeaderAdmin {
   protected readonly formSupportNotes = signal('');
   protected readonly fields = signal<FieldRow[]>([]);
   protected readonly newDataPointId = signal('');
+  /** The active data-point catalogue for the field drop-down (R16.2). */
+  protected readonly dataPoints = signal<DataPointOption[]>([]);
   protected readonly saving = signal(false);
   protected readonly formError = signal<string | null>(null);
   /** The version number just published, shown to confirm the pinning semantics. */
@@ -130,6 +133,16 @@ export class TaskLeaderAdmin {
     () => this.formName().trim() !== '' && !this.saving() && !this.editorLoading(),
   );
 
+  /**
+   * The data points a leader may still add: the active catalogue minus the ones
+   * already used by a field on this task (so the drop-down can't create a
+   * duplicate). Sorted by name for a stable, readable list.
+   */
+  protected readonly availableDataPoints = computed<DataPointOption[]>(() => {
+    const used = new Set(this.fields().map((f) => f.dataPointId));
+    return this.dataPoints().filter((dp) => !used.has(dp.id));
+  });
+
   protected readonly canAddField = computed(() => {
     const id = parsePositiveInt(this.newDataPointId());
     return id !== null && !this.fields().some((f) => f.dataPointId === id);
@@ -137,6 +150,25 @@ export class TaskLeaderAdmin {
 
   constructor() {
     this.loadLeadableTeams();
+    this.loadDataPoints();
+  }
+
+  /** Load the active data-point catalogue for the field drop-down (R16.2). */
+  private loadDataPoints(): void {
+    this.service.listDataPoints().subscribe({
+      next: (points) => this.dataPoints.set(points),
+      error: () => this.dataPoints.set([]),
+    });
+  }
+
+  /** Look up a data point in the loaded catalogue by id. */
+  private dataPointById(id: number): DataPointOption | undefined {
+    return this.dataPoints().find((dp) => dp.id === id);
+  }
+
+  /** Friendly name for a data point id (catalogue lookup; falls back to the id). */
+  protected dataPointName(id: number): string {
+    return this.dataPointById(id)?.name ?? `Data point ${id}`;
   }
 
   private loadLeadableTeams(): void {
@@ -251,16 +283,21 @@ export class TaskLeaderAdmin {
   /** Add a new field referencing the entered data point id (R16.2). */
   protected addField(): void {
     const id = parsePositiveInt(this.newDataPointId());
+    // Guard against a missing selection or a DUPLICATE data point on the task.
     if (id === null || this.fields().some((f) => f.dataPointId === id)) {
       return;
     }
+    const dp = this.dataPointById(id);
     this.fields.update((prev) => [
       ...prev,
       {
         key: this.nextKey++,
         dataPointId: id,
-        name: '',
-        dataType: '',
+        // Name/type come straight from the chosen data point (shown immediately,
+        // not "resolved on save"). Falls back gracefully if the catalogue is
+        // unavailable — the server still validates the id on save.
+        name: dp?.name ?? '',
+        dataType: dp?.dataType ?? '',
         isExisting: false,
         isMandatory: false,
         descriptionOverride: '',
@@ -318,6 +355,18 @@ export class TaskLeaderAdmin {
     if (mode === null) {
       return;
     }
+
+    // Belt-and-braces duplicate check before saving: a data point may appear at
+    // most once per task. The drop-down already excludes used points, but guard
+    // here too so the create/edit never submits duplicate fields (R16.2).
+    const ids = this.fields().map((f) => f.dataPointId);
+    const duplicate = ids.find((id, i) => ids.indexOf(id) !== i);
+    if (duplicate !== undefined) {
+      const name = this.dataPointById(duplicate)?.name ?? `data point #${duplicate}`;
+      this.formError.set(`"${name}" is added more than once. Each field must be a distinct data point.`);
+      return;
+    }
+
     const fieldInputs = this.buildFieldInputs();
     const supportNotes = this.formSupportNotes().trim();
     const name = this.formName().trim();

@@ -11,6 +11,6 @@
  * seam.
  */
 export type { ManagerGraph, ResolveOptions, UserId } from './hierarchy.js';
-export { resolveDownwardHierarchy } from './hierarchy.js';
+export { resolveDownwardHierarchy, resolveTeamHierarchy } from './hierarchy.js';
 export type { ManagerGraphLoader } from './hierarchy-loader.js';
 export { DbManagerGraphLoader } from './hierarchy-loader.js';

@@ -140,7 +140,7 @@
               <legend class="field-label">Fields (in order)</legend>
 
               @if (fields().length === 0) {
-                <p class="admin-note">No fields yet. Add one by data point id below.</p>
+                <p class="admin-note">No fields yet. Choose a data point below to add a field.</p>
               } @else {
                 <ul class="field-list">
                   @for (f of fields(); track trackByFieldKey($index, f); let i = $index) {
@@ -148,15 +148,10 @@
                       <div class="field-item-head">
                         <div class="field-identity">
                           <span class="field-order">#{{ i + 1 }}</span>
-                          <span class="field-name">
-                            {{ f.name || 'Data point ' + f.dataPointId }}
-                          </span>
+                          <span class="field-name">{{ f.name || dataPointName(f.dataPointId) }}</span>
                           @if (f.dataType) {
                             <span class="field-type">{{ f.dataType }}</span>
-                          } @else {
-                            <span class="field-type pending">resolved on save</span>
                           }
-                          <span class="field-dp">DP #{{ f.dataPointId }}</span>
                         </div>
                         <div class="field-move">
                           <button
@@ -243,19 +238,22 @@
 
               <div class="add-field-row">
                 <label class="field add-field">
-                  <span class="sub-label">Add a field by data point id</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
+                  <span class="sub-label">Add a field</span>
+                  <select
                     class="field-control"
-                    name="newDataPointId"
-                    [ngModel]="newDataPointId()"
-                    (ngModelChange)="newDataPointId.set($event)"
-                    placeholder="e.g. 7"
-                    inputmode="numeric"
-                    aria-label="Data point id to add"
-                  />
+                    aria-label="Data point to add as a field"
+                    [value]="newDataPointId()"
+                    (change)="newDataPointId.set($any($event.target).value)"
+                  >
+                    <option value="" disabled [selected]="newDataPointId() === ''">
+                      Select a data point…
+                    </option>
+                    @for (dp of availableDataPoints(); track dp.id) {
+                      <option [value]="dp.id" [selected]="newDataPointId() === (dp.id + '')">
+                        {{ dp.name }} ({{ dp.dataType }})
+                      </option>
+                    }
+                  </select>
                 </label>
                 <button
                   type="button"
@@ -266,6 +264,9 @@
                   Add field
                 </button>
               </div>
+              @if (availableDataPoints().length === 0 && dataPoints().length > 0) {
+                <p class="admin-note">All available data points have been added to this task.</p>
+              }
             </fieldset>
 
             @if (formError()) {

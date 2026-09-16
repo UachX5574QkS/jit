@@ -92,11 +92,29 @@ describe('TaskLeaderAdmin', () => {
     currentUser = TestBed.inject(CurrentUserService);
   });
 
+  /** Flush the active data-point catalogue request fired on component init. */
+  function flushDataPoints() {
+    const reqs = httpMock.match(
+      (r) => r.url === '/api/team-leader/data-points' && r.method === 'GET',
+    );
+    for (const req of reqs) {
+      req.flush({
+        dataPoints: [
+          { id: 7, name: 'Employee ID', dataType: 'TEXT', description: null },
+          { id: 8, name: 'Access Level', dataType: 'DROPDOWN', description: null },
+          { id: 9, name: 'Kit request', dataType: 'TEXT', description: null },
+          { id: 99, name: 'Legacy field', dataType: 'TEXT', description: null },
+        ],
+      });
+    }
+  }
+
   /** Create the component for a leader of one team (auto-selected) and flush loads. */
   function createForSingleTeam(tasks: ActiveTask[] = TASKS) {
     currentUser.setUser(makeUser([TEAM_ID]));
     const fixture = TestBed.createComponent(TaskLeaderAdmin);
     fixture.detectChanges();
+    flushDataPoints();
     httpMock
       .expectOne((r) => r.url === '/api/teams' && r.method === 'GET')
       .flush({ teams: [{ id: TEAM_ID, title: 'Access Management', description: null }] });
@@ -331,6 +349,7 @@ describe('TaskLeaderAdmin', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.admin-error')?.textContent).toContain('team you lead');
+    flushDataPoints();
     httpMock.verify();
   });
 });

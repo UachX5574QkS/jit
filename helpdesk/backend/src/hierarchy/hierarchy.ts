@@ -69,6 +69,12 @@ export interface ManagerGraph {
    */
   readonly directReports: ReadonlyMap<UserId, ReadonlySet<UserId>>;
   /**
+   * Each user's manager: `managerOf.get(userId)` is that user's
+   * `app_user.manager_id`, or absent when they have no manager (top of a
+   * chain). Used to resolve the "My Team" root (a user's manager) per R4.3.
+   */
+  readonly managerOf: ReadonlyMap<UserId, UserId>;
+  /**
    * The set of users designated area managers, read from the separate
    * `area_manager` lookup (R19.3). Used as the traversal boundary (R19.2).
    */
@@ -148,4 +154,32 @@ export function resolveDownwardHierarchy(
     result.add(rootId);
   }
   return result;
+}
+
+
+/**
+ * Resolve the "My Team" population for `viewerId` (R4.3, R19): the set of people
+ * in the subtree rooted at the viewer's MANAGER — i.e. the viewer, their peers
+ * (siblings under the same manager), and everyone cascading below — mirroring
+ * the Oracle-style `CONNECT BY manager = id START WITH id = (my manager)`.
+ *
+ * Behaviour:
+ *   • Start at the viewer's manager and walk downward, INCLUDING that manager
+ *     (so the whole peer group + the manager appear).
+ *   • WHEN the viewer has NO manager (top of a chain) fall back to the subtree
+ *     rooted at the viewer THEMSELVES (including self), so a top-level manager
+ *     still sees their own team rather than an empty list.
+ *   • The area-manager cutoff (R19.2) and cycle guard (R19.4) are inherited from
+ *     {@link resolveDownwardHierarchy}.
+ * The result always contains the viewer (they are within their manager's
+ * subtree, or are the fallback root), so "My Team" is a superset of the
+ * viewer's own requests.
+ */
+export function resolveTeamHierarchy(viewerId: UserId, graph: ManagerGraph): Set<UserId> {
+  const managerId = graph.managerOf.get(viewerId);
+  const root = managerId ?? viewerId;
+  const team = resolveDownwardHierarchy(root, graph, { includeRoot: true });
+  // Defensive: guarantee the viewer is present even on odd/cyclic data.
+  team.add(viewerId);
+  return team;
 }

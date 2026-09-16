@@ -3,6 +3,7 @@ import { PieChartComponent } from '../../shared/charts/pie-chart';
 import { StackedBarChartComponent } from '../../shared/charts/stacked-bar-chart';
 import { StatsNav } from './stats-nav';
 import type { PieSlice, StackedBar } from '../../shared/charts/chart-data';
+import { STATUS_COLORS } from '../../shared/charts/chart-data';
 import { STATUSES, type Status } from '../support/status-transitions';
 import {
   UserStatisticsService,
@@ -165,6 +166,9 @@ export function toStatusMonthBars(buckets: readonly StatusMonthBucket[]): Stacke
     const segments = STATUSES.filter((s) => (statuses.get(s) ?? 0) > 0).map((s) => ({
       label: s,
       value: statuses.get(s)!,
+      // Distinct hue per status (consistent across every bar), so the stacked
+      // segments are easy to tell apart rather than shades of one colour.
+      color: STATUS_COLORS[s],
     }));
     return { label: month, segments };
   });

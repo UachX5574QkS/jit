@@ -67,6 +67,19 @@
       <!-- ── Requests table (all columns, R4.5) ── -->
       <div class="table-scroll">
         <table class="requests-table">
+          <colgroup>
+            <col style="width: 9%" />   <!-- Task Number -->
+            <col style="width: 7%" />   <!-- Jira -->
+            <col style="width: 18%" />  <!-- Title -->
+            <col style="width: 9%" />   <!-- Date Raised -->
+            <col style="width: 9%" />   <!-- Status -->
+            <col style="width: 15%" />  <!-- Support Team -->
+            <col style="width: 12%" />  <!-- Assigned To -->
+            <col style="width: 9%" />   <!-- Last Updated -->
+            <col style="width: 6%" />   <!-- Est. Start -->
+            <col style="width: 6%" />   <!-- Actual Start -->
+            <col style="width: 8%" />   <!-- Est. Effort -->
+          </colgroup>
           <thead>
             <tr>
               <th scope="col">Task Number</th>
@@ -80,12 +93,16 @@
               <th scope="col">Est. Start</th>
               <th scope="col">Actual Start</th>
               <th scope="col">Est. Effort</th>
-              <th scope="col"><span class="visually-hidden">Updated</span></th>
             </tr>
           </thead>
           <tbody>
             @for (row of rows(); track trackById($index, row)) {
-              <tr class="request-row" (click)="openRequest(row)">
+              <tr
+                class="request-row"
+                [class.is-updated]="row.updatedSinceLastSeen"
+                [attr.title]="row.updatedSinceLastSeen ? 'Changed since you last viewed it' : null"
+                (click)="openRequest(row)"
+              >
                 <td class="cell-ref">
                   <a
                     class="ref-link"
@@ -94,7 +111,7 @@
                   >{{ row.taskReference }}</a>
                 </td>
                 <td>{{ row.jiraNumber || '—' }}</td>
-                <td class="cell-title">{{ row.title }}</td>
+                <td class="cell-title cell-wrap">{{ row.title }}</td>
                 <td>{{ row.dateRaised | localDate }}</td>
                 <td>
                   <span
@@ -103,17 +120,12 @@
                     [class.is-working]="row.hasOpenTimer && !isClosed(row)"
                   >{{ displayStatus(row) }}</span>
                 </td>
-                <td>{{ row.teamTitle }}</td>
-                <td>{{ row.assignedMemberName || '—' }}</td>
+                <td class="cell-wrap">{{ row.teamTitle }}</td>
+                <td class="cell-wrap">{{ row.assignedMemberName || '—' }}</td>
                 <td>{{ row.lastUpdated | localDate:'datetime' }}</td>
                 <td>{{ row.estimatedStartDate | localDate:'date':'—' }}</td>
                 <td>{{ row.actualStartDate | localDate:'date':'—' }}</td>
                 <td>{{ effortLabel(row) }}</td>
-                <td class="cell-updated">
-                  @if (row.updatedSinceLastSeen) {
-                    <span class="updated-pill" title="Changed since you last viewed it">Updated</span>
-                  }
-                </td>
               </tr>
             }
           </tbody>

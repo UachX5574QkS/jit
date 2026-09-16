@@ -44,6 +44,7 @@ function dbRow(overrides: Partial<Record<string, unknown>> = {}) {
     estimated_start_date: new Date('2026-02-05T00:00:00.000Z'),
     actual_start_date: null,
     has_open_timer: false,
+    estimated_effort_minutes: null,
     updated_since_last_seen: false,
     ...overrides,
   };
@@ -82,7 +83,15 @@ function graphOf(
     }
     reports.add(c);
   }
-  return { directReports, areaManagerIds: new Set<UserId>(areaManagers) };
+  const managerOfMap = new Map<UserId, UserId>();
+  for (const [child, manager] of Object.entries(managerOf)) {
+    managerOfMap.set(Number(child), Number(manager));
+  }
+  return {
+    directReports,
+    managerOf: managerOfMap,
+    areaManagerIds: new Set<UserId>(areaManagers),
+  };
 }
 
 /** A fake loader returning a fixed graph and recording whether it was loaded. */
@@ -270,11 +279,20 @@ describe('DbRequestListStore.list — column mapping (R4.5, R4.9)', () => {
       estimatedStartDate: '2026-02-05T00:00:00.000Z',
       actualStartDate: null,
       hasOpenTimer: false,
-      // Owned by task 6.7 — left null here.
+      // Type-level effort; null here because the fake row supplies no value.
       estimatedEffortMinutes: null,
       // The viewer's "Updated" indicator (R4.8) — driven by updated_since_last_seen.
       updatedSinceLastSeen: false,
     });
+  });
+
+  it('maps a computed estimated effort (type-level average) through to the row', async () => {
+    const { db } = fakeDb([dbRow({ estimated_effort_minutes: 75 })]);
+    const store = new DbRequestListStore(db, fakeLoader(graphOf({})));
+
+    const [row] = await store.list(mineQuery, viewer);
+
+    assert.equal(row.estimatedEffortMinutes, 75);
   });
 
   it('maps a null assignment and an open timer', async () => {

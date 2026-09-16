@@ -72,6 +72,9 @@ function fakeStore(options: {
     }
   };
   const store: FakeTaskStore = {
+    async listActiveDataPoints() {
+      return [];
+    },
     async findTeamIdForTask(taskId: number): Promise<number | null> {
       return teamByTask[taskId] ?? null;
     },

@@ -178,6 +178,7 @@ interface SupportListDbRow {
   estimated_start_date: Date | string | null;
   actual_start_date: Date | string | null;
   has_open_timer: boolean;
+  estimated_effort_minutes: string | number | null;
   updated_since_last_seen: boolean;
 }
 
@@ -211,8 +212,10 @@ function toRow(row: SupportListDbRow): SupportListRow {
     estimatedStartDate: toIso(row.estimated_start_date),
     actualStartDate: toIso(row.actual_start_date),
     hasOpenTimer: row.has_open_timer === true,
-    // Owned by task 6.7; left null so the row shape is stable.
-    estimatedEffortMinutes: null,
+    // Type-level average effort from COMPLETE requests of the same task type
+    // (R4.7), computed in the query; null when the type has none yet.
+    estimatedEffortMinutes:
+      row.estimated_effort_minutes == null ? null : Number(row.estimated_effort_minutes),
     // The "Updated" indicator for the viewing support user (R4.8, R7.5, R7.6).
     updatedSinceLastSeen: row.updated_since_last_seen === true,
   };
@@ -322,6 +325,11 @@ export class DbSupportListStore implements SupportListStore {
                   SELECT 1 FROM active_timer at WHERE at.request_id = r.id
                 )
               )                       AS has_open_timer,
+              -- Estimated Effort for this row's TASK TYPE (R4.7): average
+              -- recorded effort on a COMPLETE request of the same type. NULL
+              -- when the type has no complete requests. Same definition as the
+              -- Requests screen and GET /tasks/:id/estimated-effort.
+              eff.estimated_effort_minutes AS estimated_effort_minutes,
               -- The "Updated" indicator for the viewing support user ($2) —
               -- R4.8/R7.5/R7.6, identical to the Requests-screen computation.
               (
@@ -333,7 +341,20 @@ export class DbSupportListStore implements SupportListStore {
               )                       AS updated_since_last_seen
          FROM request r
          JOIN team tm            ON tm.id = r.team_id
+         JOIN task_version rtv   ON rtv.id = r.task_version_id
          LEFT JOIN app_user am   ON am.id = r.assigned_member_id
+         LEFT JOIN LATERAL (
+                SELECT CASE
+                         WHEN COUNT(DISTINCT cr.id) = 0 THEN NULL
+                         ELSE COALESCE(SUM(cts.duration_minutes), 0)::float
+                              / COUNT(DISTINCT cr.id)
+                       END AS estimated_effort_minutes
+                  FROM request cr
+                  JOIN task_version ctv ON ctv.id = cr.task_version_id
+                  LEFT JOIN time_slice cts ON cts.request_id = cr.id
+                 WHERE ctv.task_id = rtv.task_id
+                   AND cr.status = 'COMPLETE'::request_status
+              ) eff ON true
          LEFT JOIN request_last_seen rls
                 ON rls.request_id = r.id
                AND rls.user_id = $2

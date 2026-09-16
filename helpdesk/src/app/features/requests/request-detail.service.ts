@@ -44,6 +44,7 @@ export interface RequestFieldDetail {
 export interface RequestNote {
   readonly id: number;
   readonly authorId: number;
+  readonly authorName: string;
   readonly isInternal: boolean;
   readonly body: string;
   readonly createdAt: string;
@@ -57,7 +58,12 @@ export interface AuditEntry {
   readonly fieldName: string;
   readonly oldValue: string | null;
   readonly newValue: string | null;
+  /** Human-friendly old value (ids resolved to names, null -> 'Unassigned'). */
+  readonly oldDisplay: string | null;
+  /** Human-friendly new value (ids resolved to names, null -> 'Unassigned'). */
+  readonly newDisplay: string | null;
   readonly changedById: number;
+  readonly changedByName: string;
   readonly changedAt: string;
 }
 
@@ -71,8 +77,10 @@ export interface RequestDetail {
   readonly versionNo: number;
   readonly title: string;
   readonly raisedById: number;
+  readonly raisedByName: string;
   readonly teamId: number;
   readonly assignedMemberId: number | null;
+  readonly assignedMemberName: string | null;
   readonly status: string;
   readonly jiraNumber: string | null;
   readonly estimatedStartDate: string | null;

@@ -4,6 +4,7 @@ import {
   resolveDownwardHierarchy,
   type ManagerGraph,
   type UserId,
+  resolveTeamHierarchy,
 } from './hierarchy.js';
 
 /**
@@ -37,7 +38,15 @@ function graphOf(
     }
     reports.add(userId);
   }
-  return { directReports, areaManagerIds: new Set<UserId>(areaManagers) };
+  const managerOfMap = new Map<UserId, UserId>();
+  for (const [userStr, managerId] of Object.entries(managerOf)) {
+    managerOfMap.set(Number(userStr), Number(managerId));
+  }
+  return {
+    directReports,
+    managerOf: managerOfMap,
+    areaManagerIds: new Set<UserId>(areaManagers),
+  };
 }
 
 /** Sorted array of a Set, so assertions are order-independent. */
@@ -135,6 +144,7 @@ describe('resolveDownwardHierarchy — cycle termination (R19.4)', () => {
         [2, new Set([3])],
         [3, new Set([2, 4])],
       ]),
+      managerOf: new Map<UserId, UserId>(),
       areaManagerIds: new Set<UserId>(),
     };
     assert.deepEqual(sorted(resolveDownwardHierarchy(1, cyclic)), [2, 3, 4]);
@@ -151,6 +161,7 @@ describe('resolveDownwardHierarchy — cycle termination (R19.4)', () => {
         [3, new Set([4])],
         [4, new Set([5])],
       ]),
+      managerOf: new Map<UserId, UserId>(),
       areaManagerIds: new Set<UserId>(),
     };
     assert.deepEqual(sorted(resolveDownwardHierarchy(1, diamond)), [2, 3, 4, 5]);
@@ -162,5 +173,30 @@ describe('resolveDownwardHierarchy — cycle termination (R19.4)', () => {
     resolveDownwardHierarchy(1, graph);
     assert.equal(graph.directReports.get(1)?.size, before);
     assert.equal(graph.areaManagerIds.size, 0);
+  });
+});
+
+
+describe('resolveTeamHierarchy — "My Team" rooted at the viewer\'s manager (R4.3)', () => {
+  it("includes the viewer, their peers, their manager, and everyone below", () => {
+    // 1 manages 2; 2 manages {3,4}; 3 manages 5. Viewer = 4.
+    // My manager is 2 → the subtree at 2 is {2,3,4,5}. Viewer 4 is included.
+    const graph = graphOf({ 2: 1, 3: 2, 4: 2, 5: 3 });
+    assert.deepEqual(sorted(resolveTeamHierarchy(4, graph)), [2, 3, 4, 5]);
+  });
+
+  it('always includes the viewer, even when they are a leaf with no reports', () => {
+    // 3 manages 4; 4 has no reports. Viewer = 4 → subtree at manager 3 = {3,4}.
+    const graph = graphOf({ 4: 3, 5: 3 });
+    const team = resolveTeamHierarchy(4, graph);
+    assert.equal(team.has(4), true, 'viewer present');
+    assert.equal(team.has(5), true, 'peer present');
+    assert.equal(team.has(3), true, 'manager present');
+  });
+
+  it('falls back to the viewer\'s own subtree when they have no manager', () => {
+    // 1 (no manager) manages {2,3}. Viewer = 1 → their own subtree {1,2,3}.
+    const graph = graphOf({ 2: 1, 3: 1 });
+    assert.deepEqual(sorted(resolveTeamHierarchy(1, graph)), [1, 2, 3]);
   });
 });

@@ -1,6 +1,6 @@
 import { Router, type RequestHandler } from 'express';
 import { ApiError, errors } from '../middleware/errors.js';
-import { requireTeamLeadership } from '../middleware/authorize.js';
+import { requireTeamLeadership, requireRole } from '../middleware/authorize.js';
 import { leadsTeam } from '../identity/index.js';
 import {
   DbTaskLeaderStore,
@@ -13,6 +13,7 @@ import {
   type TaskLeaderStore,
   type TaskVersionView,
   type TaskView,
+  type DataPointOption,
 } from './task-leader.store.js';
 
 /**
@@ -438,6 +439,21 @@ export function createRetireTaskHandler(store: TaskLeaderStore): RequestHandler 
 }
 
 /**
+ * `GET /api/team-leader/data-points` — the ACTIVE data-point catalogue a team
+ * leader picks from when adding task fields (R16.2). Returns id + name + type +
+ * description so the editor can render a proper drop-down (rather than making
+ * the leader type a numeric id). Available to team leaders and administrators.
+ */
+export function createListDataPointsHandler(store: TaskLeaderStore): RequestHandler {
+  return (_req, res, next) => {
+    void (async () => {
+      const dataPoints: DataPointOption[] = await store.listActiveDataPoints();
+      res.status(200).json({ dataPoints });
+    })().catch(next);
+  };
+}
+
+/**
  * Build the team-leader task router. CREATE is guarded up front by
  * {@link requireTeamLeadership} keyed on the body `teamId`; EDIT/RETIRE assert
  * leadership inside the handler after resolving the task's team (R16.1). The
@@ -445,6 +461,11 @@ export function createRetireTaskHandler(store: TaskLeaderStore): RequestHandler 
  */
 export function createTaskLeaderRouter(store: TaskLeaderStore): Router {
   const router = Router();
+  router.get(
+    '/data-points',
+    requireRole('TEAM_LEADER', 'ADMINISTRATOR'),
+    createListDataPointsHandler(store),
+  );
   router.post('/tasks', requireTeamLeadership('teamId'), createCreateTaskHandler(store));
   router.patch('/tasks/:id', createNewVersionHandler(store));
   router.post('/tasks/:id/retire', createRetireTaskHandler(store));

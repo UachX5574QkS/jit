@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { STATUS_COLORS } from '../../shared/charts/chart-data';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -197,7 +198,14 @@ describe('toStatusMonthBars (R10.1)', () => {
     // 2026-01 has two segments in canonical order (NEW before COMPLETE).
     expect(bars[0].segments.map((s) => s.label)).toEqual(['NEW', 'COMPLETE']);
     expect(bars[0].segments.map((s) => s.value)).toEqual([2, 1]);
-    expect(bars[1].segments).toEqual([{ label: 'TRIAGE', value: 3 }]);
+    expect(bars[1].segments).toEqual([
+      { label: 'TRIAGE', value: 3, color: STATUS_COLORS['TRIAGE'] },
+    ]);
+    // Each status has its own distinct colour, consistent across bars.
+    expect(bars[0].segments.map((s) => s.color)).toEqual([
+      STATUS_COLORS['NEW'],
+      STATUS_COLORS['COMPLETE'],
+    ]);
   });
 
   it('returns no bars for an empty dataset', () => {

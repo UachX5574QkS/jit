@@ -106,6 +106,8 @@ export interface RequestFieldView {
 export interface RequestNoteView {
   readonly id: number;
   readonly authorId: number;
+  /** The note author's display name ("firstname surname"). */
+  readonly authorName: string;
   /** True for support-only internal notes (never returned to non-support). */
   readonly isInternal: boolean;
   readonly body: string;
@@ -121,7 +123,13 @@ export interface AuditEntryView {
   readonly fieldName: string;
   readonly oldValue: string | null;
   readonly newValue: string | null;
+  /** Human-friendly old value: ids resolved to names, null -> 'Unassigned'. */
+  readonly oldDisplay: string | null;
+  /** Human-friendly new value: ids resolved to names, null -> 'Unassigned'. */
+  readonly newDisplay: string | null;
   readonly changedById: number;
+  /** The actor's display name ("firstname surname"). */
+  readonly changedByName: string;
   readonly changedAt: string;
 }
 
@@ -135,8 +143,12 @@ export interface RequestDetailView {
   readonly versionNo: number;
   readonly title: string;
   readonly raisedById: number;
+  /** The raiser's display name ("firstname surname"). */
+  readonly raisedByName: string;
   readonly teamId: number;
   readonly assignedMemberId: number | null;
+  /** The assigned member's display name, or null when unassigned. */
+  readonly assignedMemberName: string | null;
   readonly status: string;
   readonly jiraNumber: string | null;
   readonly estimatedStartDate: string | null;
@@ -191,8 +203,10 @@ interface RequestHeaderDbRow {
   version_no: number;
   title: string;
   raised_by_id: string | number;
+  raised_by_name: string;
   team_id: string | number;
   assigned_member_id: string | number | null;
+  assigned_member_name: string | null;
   status: string;
   jira_number: string | null;
   estimated_start_date: Date | string | null;
@@ -221,6 +235,7 @@ interface DetailFieldDbRow {
 interface NoteDbRow {
   id: string | number;
   author_id: string | number;
+  author_name: string;
   is_internal: boolean;
   body: string;
   created_at: Date | string;
@@ -234,6 +249,7 @@ interface AuditDbRow {
   old_value: string | null;
   new_value: string | null;
   changed_by_id: string | number;
+  changed_by_name: string;
   changed_at: Date | string;
 }
 
@@ -302,6 +318,7 @@ function toNoteView(row: NoteDbRow): RequestNoteView {
   return {
     id: Number(row.id),
     authorId: Number(row.author_id),
+    authorName: row.author_name,
     isInternal: row.is_internal,
     body: row.body,
     createdAt: toIso(row.created_at) as string,
@@ -316,9 +333,121 @@ function toAuditView(row: AuditDbRow): AuditEntryView {
     fieldName: row.field_name,
     oldValue: row.old_value,
     newValue: row.new_value,
+    // Display values are resolved after loading (see resolveAuditDisplays);
+    // default to the raw value so an unresolved entry still reads sensibly.
+    oldDisplay: row.old_value,
+    newDisplay: row.new_value,
     changedById: Number(row.changed_by_id),
+    changedByName: row.changed_by_name,
     changedAt: toIso(row.changed_at) as string,
   };
+}
+
+/**
+ * Audit fields whose stored value is an `app_user.id` — displayed as the
+ * person's name. `assigned_member_id` additionally shows a null/blank as
+ * "Unassigned" (an unassignment), whereas `raised_by_id` is always present.
+ */
+const PERSON_ID_FIELDS: ReadonlySet<string> = new Set([
+  'raised_by_id',
+  'assigned_member_id',
+]);
+/** Audit field whose value is a `team.id` — displayed as the team title. */
+const TEAM_ID_FIELD = 'team_id';
+/** Audit field whose value is a `task_version.id` — displayed as "Task (vN)". */
+const TASK_VERSION_ID_FIELD = 'task_version_id';
+
+/** Collect the numeric ids referenced by `fields` across old/new audit values. */
+function collectIds(
+  entries: readonly AuditEntryView[],
+  matches: (fieldName: string) => boolean,
+): number[] {
+  const ids = new Set<number>();
+  for (const e of entries) {
+    if (!matches(e.fieldName)) continue;
+    for (const v of [e.oldValue, e.newValue]) {
+      if (v != null && /^[0-9]+$/.test(v)) {
+        ids.add(Number(v));
+      }
+    }
+  }
+  return [...ids];
+}
+
+/**
+ * Resolve id-bearing audit values into human-readable displays (R17.4 — the
+ * trail is for people, not internal keys):
+ *   • raised_by_id / assigned_member_id → person's name (assignment null/blank
+ *     → "Unassigned");
+ *   • team_id → team title;
+ *   • task_version_id → "Task name (vN)".
+ * Every other field keeps its raw value. Labels are batch-loaded via a few
+ * parameterised set reads (no per-row query, no interpolation).
+ */
+export async function resolveAuditDisplays(
+  entries: AuditEntryView[],
+  db: Queryable,
+): Promise<AuditEntryView[]> {
+  const personIds = collectIds(entries, (f) => PERSON_ID_FIELDS.has(f));
+  const teamIds = collectIds(entries, (f) => f === TEAM_ID_FIELD);
+  const versionIds = collectIds(entries, (f) => f === TASK_VERSION_ID_FIELD);
+
+  const [people, teams, versions] = await Promise.all([
+    personIds.length
+      ? many<{ id: string | number; name: string }>(
+          `SELECT id, (first_name || ' ' || surname) AS name
+             FROM app_user WHERE id = ANY($1)`,
+          [personIds],
+          db,
+        )
+      : Promise.resolve([]),
+    teamIds.length
+      ? many<{ id: string | number; title: string }>(
+          `SELECT id, title FROM team WHERE id = ANY($1)`,
+          [teamIds],
+          db,
+        )
+      : Promise.resolve([]),
+    versionIds.length
+      ? many<{ id: string | number; label: string }>(
+          `SELECT tv.id AS id,
+                  (t.name || ' (v' || tv.version_no || ')') AS label
+             FROM task_version tv
+             JOIN task t ON t.id = tv.task_id
+            WHERE tv.id = ANY($1)`,
+          [versionIds],
+          db,
+        )
+      : Promise.resolve([]),
+  ]);
+
+  const personById = new Map(people.map((r) => [String(r.id), r.name]));
+  const teamById = new Map(teams.map((r) => [String(r.id), r.title]));
+  const versionById = new Map(versions.map((r) => [String(r.id), r.label]));
+
+  const display = (fieldName: string, value: string | null): string | null => {
+    if (PERSON_ID_FIELDS.has(fieldName)) {
+      if (value == null || value === '') {
+        // Only the assignment field meaningfully "unassigns"; raised_by is
+        // always set, but treat a missing value uniformly.
+        return fieldName === 'assigned_member_id' ? 'Unassigned' : value;
+      }
+      return personById.get(value) ?? value;
+    }
+    if (fieldName === TEAM_ID_FIELD && value != null) {
+      return teamById.get(value) ?? value;
+    }
+    if (fieldName === TASK_VERSION_ID_FIELD && value != null) {
+      return versionById.get(value) ?? value;
+    }
+    return value;
+  };
+
+  return entries.map((e) => ({
+    ...e,
+    oldDisplay: display(e.fieldName, e.oldValue),
+    newDisplay: display(e.fieldName, e.newValue),
+  }));
 }
 
 /**
@@ -356,8 +485,10 @@ export class DbRequestDetailStore implements RequestDetailStore {
                 tv.version_no           AS version_no,
                 r.title                 AS title,
                 r.raised_by_id          AS raised_by_id,
+                (rb.first_name || ' ' || rb.surname) AS raised_by_name,
                 r.team_id               AS team_id,
                 r.assigned_member_id    AS assigned_member_id,
+                (am.first_name || ' ' || am.surname) AS assigned_member_name,
                 r.status                AS status,
                 r.jira_number           AS jira_number,
                 r.estimated_start_date  AS estimated_start_date,
@@ -367,6 +498,8 @@ export class DbRequestDetailStore implements RequestDetailStore {
            FROM request r
            JOIN task_version tv ON tv.id = r.task_version_id
            JOIN task t          ON t.id = tv.task_id
+           JOIN app_user rb     ON rb.id = r.raised_by_id
+           LEFT JOIN app_user am ON am.id = r.assigned_member_id
           WHERE r.id = $1`,
         [requestId],
         tx,
@@ -448,19 +581,25 @@ export class DbRequestDetailStore implements RequestDetailStore {
       //    R7.3). Support viewers see all notes.
       const noteRows = isSupportViewer
         ? await many<NoteDbRow>(
-            `SELECT id, author_id, is_internal, body, created_at
-               FROM request_note
-              WHERE request_id = $1
-              ORDER BY created_at ASC, id ASC`,
+            `SELECT n.id, n.author_id,
+                    (au.first_name || ' ' || au.surname) AS author_name,
+                    n.is_internal, n.body, n.created_at
+               FROM request_note n
+               JOIN app_user au ON au.id = n.author_id
+              WHERE n.request_id = $1
+              ORDER BY n.created_at ASC, n.id ASC`,
             [requestId],
             tx,
           )
         : await many<NoteDbRow>(
-            `SELECT id, author_id, is_internal, body, created_at
-               FROM request_note
-              WHERE request_id = $1
-                AND is_internal = false
-              ORDER BY created_at ASC, id ASC`,
+            `SELECT n.id, n.author_id,
+                    (au.first_name || ' ' || au.surname) AS author_name,
+                    n.is_internal, n.body, n.created_at
+               FROM request_note n
+               JOIN app_user au ON au.id = n.author_id
+              WHERE n.request_id = $1
+                AND n.is_internal = false
+              ORDER BY n.created_at ASC, n.id ASC`,
             [requestId],
             tx,
           );
@@ -471,30 +610,40 @@ export class DbRequestDetailStore implements RequestDetailStore {
       //    change is ever surfaced (R5.1, R17.4). Support viewers get all.
       const auditRows = isSupportViewer
         ? await many<AuditDbRow>(
-            `SELECT id, entity_type, entity_id, field_name, old_value,
-                    new_value, changed_by_id, changed_at
-               FROM audit_entry
-              WHERE (entity_type = 'request' AND entity_id = $1)
-                 OR (entity_type = 'request_note'
-                     AND entity_id IN (
+            `SELECT ae.id, ae.entity_type, ae.entity_id, ae.field_name,
+                    ae.old_value,
+                    ae.new_value,
+                    ae.changed_by_id,
+                    (cu.first_name || ' ' || cu.surname) AS changed_by_name,
+                    ae.changed_at
+               FROM audit_entry ae
+               JOIN app_user cu ON cu.id = ae.changed_by_id
+              WHERE (ae.entity_type = 'request' AND ae.entity_id = $1)
+                 OR (ae.entity_type = 'request_note'
+                     AND ae.entity_id IN (
                        SELECT id FROM request_note WHERE request_id = $1
                      ))
-              ORDER BY changed_at ASC, id ASC`,
+              ORDER BY ae.changed_at ASC, ae.id ASC`,
             [requestId],
             tx,
           )
         : await many<AuditDbRow>(
-            `SELECT id, entity_type, entity_id, field_name, old_value,
-                    new_value, changed_by_id, changed_at
-               FROM audit_entry
-              WHERE (entity_type = 'request' AND entity_id = $1)
-                 OR (entity_type = 'request_note'
-                     AND entity_id IN (
+            `SELECT ae.id, ae.entity_type, ae.entity_id, ae.field_name,
+                    ae.old_value,
+                    ae.new_value,
+                    ae.changed_by_id,
+                    (cu.first_name || ' ' || cu.surname) AS changed_by_name,
+                    ae.changed_at
+               FROM audit_entry ae
+               JOIN app_user cu ON cu.id = ae.changed_by_id
+              WHERE (ae.entity_type = 'request' AND ae.entity_id = $1)
+                 OR (ae.entity_type = 'request_note'
+                     AND ae.entity_id IN (
                        SELECT id FROM request_note
                         WHERE request_id = $1
                           AND is_internal = false
                      ))
-              ORDER BY changed_at ASC, id ASC`,
+              ORDER BY ae.changed_at ASC, ae.id ASC`,
             [requestId],
             tx,
           );
@@ -511,6 +660,11 @@ export class DbRequestDetailStore implements RequestDetailStore {
         tx,
       );
 
+      // Resolve id-bearing audit values (raiser/assignee -> name, team -> title,
+      // task version -> "Task (vN)") into human-readable displays. Non-id fields
+      // keep their raw value. Batched so it is a handful of set-based reads.
+      const auditTrail = await resolveAuditDisplays(auditRows.map(toAuditView), tx);
+
       return {
         id: Number(header.id),
         taskReference: header.task_reference,
@@ -520,9 +674,11 @@ export class DbRequestDetailStore implements RequestDetailStore {
         versionNo: header.version_no,
         title: header.title,
         raisedById,
+        raisedByName: header.raised_by_name,
         teamId,
         assignedMemberId:
           header.assigned_member_id == null ? null : Number(header.assigned_member_id),
+        assignedMemberName: header.assigned_member_name,
         status: header.status,
         jiraNumber: header.jira_number,
         estimatedStartDate: toIso(header.estimated_start_date),
@@ -531,7 +687,7 @@ export class DbRequestDetailStore implements RequestDetailStore {
         updatedAt: toIso(header.updated_at) as string,
         fields: fieldRows.map(toFieldView),
         notes: noteRows.map(toNoteView),
-        auditTrail: auditRows.map(toAuditView),
+        auditTrail,
       };
     });
   }

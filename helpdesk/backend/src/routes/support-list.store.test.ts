@@ -43,6 +43,7 @@ function dbRow(overrides: Partial<Record<string, unknown>> = {}) {
     estimated_start_date: new Date('2026-02-05T00:00:00.000Z'),
     actual_start_date: null,
     has_open_timer: false,
+    estimated_effort_minutes: null,
     updated_since_last_seen: false,
     ...overrides,
   };
@@ -299,7 +300,7 @@ describe('DbSupportListStore.list — column mapping (R6.7, R4.5, R4.9)', () => 
       estimatedStartDate: '2026-02-05T00:00:00.000Z',
       actualStartDate: null,
       hasOpenTimer: false,
-      // Owned by task 6.7 — left null here.
+      // Type-level effort; null here because the fake row supplies no value.
       estimatedEffortMinutes: null,
       // The support user's "Updated" indicator (R4.8).
       updatedSinceLastSeen: false,

@@ -79,7 +79,15 @@ function graphOf(
     }
     reports.add(reportId);
   }
-  return { directReports, areaManagerIds: new Set<UserId>(areaManagers) };
+  const managerOfMap = new Map<UserId, UserId>();
+  for (const [child, manager] of Object.entries(edges)) {
+    managerOfMap.set(Number(child), Number(manager));
+  }
+  return {
+    directReports,
+    managerOf: managerOfMap,
+    areaManagerIds: new Set<UserId>(areaManagers),
+  };
 }
 
 /** A fake loader returning `graph`, recording how many times it was consulted. */

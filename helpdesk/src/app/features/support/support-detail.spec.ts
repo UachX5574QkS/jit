@@ -54,6 +54,7 @@ function note(overrides: Partial<RequestNote> = {}): RequestNote {
   return {
     id: 1,
     authorId: SUPPORT_ID,
+    authorName: 'Support Member',
     isInternal: false,
     body: 'An external note',
     createdAt: '2026-02-05T10:00:00.000Z',
@@ -69,7 +70,10 @@ function audit(overrides: Partial<AuditEntry> = {}): AuditEntry {
     fieldName: 'status',
     oldValue: 'NEW',
     newValue: 'TRIAGE',
+    oldDisplay: 'NEW',
+    newDisplay: 'TRIAGE',
     changedById: SUPPORT_ID,
+    changedByName: 'Support Member',
     changedAt: '2026-02-05T11:00:00.000Z',
     ...overrides,
   };
@@ -85,8 +89,10 @@ function detail(overrides: Partial<RequestDetailModel> = {}): RequestDetailModel
     versionNo: 1,
     title: 'Need access',
     raisedById: RAISER_ID,
+    raisedByName: 'Raiser Member',
     teamId: TEAM_ID,
     assignedMemberId: null,
+    assignedMemberName: null,
     status: 'NEW',
     jiraNumber: null,
     estimatedStartDate: null,
@@ -264,7 +270,7 @@ describe('SupportDetail (task 12.2; R7, R9)', () => {
       }),
     );
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.audit-field')?.textContent?.trim()).toBe('request_note');
+    expect(el.querySelector('.audit-field')?.textContent?.trim()).toBe('Request Note');
     httpMock.verify();
   });
 

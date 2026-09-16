@@ -3,8 +3,10 @@
 }
 
 .requests-list {
-  max-width: var(--content-max-width);
-  margin: 0 auto;
+  /* Data table fills the full width of the content section (no reading cap),
+     so it uses all available space and reflows as the window resizes. */
+  width: 100%;
+  margin: 0;
 }
 
 .greeting {
@@ -148,6 +150,7 @@
 
 .requests-table {
   width: 100%;
+  table-layout: fixed; /* columns share the section width; content wraps to fit */
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -159,16 +162,19 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--ink-3);
-  padding: 10px 12px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--line);
-  white-space: nowrap;
+  white-space: normal;     /* allow header labels to wrap onto two lines */
+  overflow-wrap: anywhere; /* break long words rather than overflow */
 }
 
 .requests-table td {
-  padding: 12px;
+  padding: 12px 8px;
   border-bottom: 1px solid var(--line);
   color: var(--ink);
   vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere; /* wrap/break long values so they fit the column */
 }
 
 .request-row {
@@ -178,6 +184,18 @@
 
 .request-row:hover {
   background: var(--color-nw-purple-bg);
+}
+
+/* Unread-update highlight (R4.8 / R7.5–7.6): a light-teal row background marks
+   a request changed since the viewer last opened it — replaces the old
+   "Updated" pill/column. A left accent reinforces it; hover still darkens. */
+.request-row.is-updated {
+  background: var(--row-updated-bg, #e3f6f3);
+  box-shadow: inset 3px 0 0 var(--color-green);
+}
+
+.request-row.is-updated:hover {
+  background: var(--row-updated-bg-hover, #d3efeb);
 }
 
 .cell-ref .ref-link {
@@ -191,7 +209,6 @@
 }
 
 .cell-title {
-  max-width: 260px;
   font-weight: 500;
 }
 
@@ -215,21 +232,6 @@
 .status-pill.is-working {
   color: var(--color-green);
   background: rgba(35, 166, 86, 0.12);
-}
-
-/* "Updated" indicator pill (R4.8) — amber to draw the eye. */
-.cell-updated {
-  white-space: nowrap;
-}
-
-.updated-pill {
-  display: inline-block;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 999px;
-  color: #ffffff;
-  background: var(--color-amber);
 }
 
 .visually-hidden {

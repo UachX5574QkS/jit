@@ -54,6 +54,29 @@ html.dark {
   --ink-2: var(--color-ink-2-dark);
   --ink-3: var(--color-ink-3-dark);
   --color-nw-purple-bg: #3A2A4E;
+  /* Unread-update row highlight tuned for dark mode (subtle teal tint). */
+  --row-updated-bg: #133b38;
+  --row-updated-bg-hover: #184a45;
+}
+
+/* -------------------------------------------------------------------------
+   Text size (accessibility) — driven by html[data-text-size], set by
+   TextSizeService and persisted to localStorage. Scales the main content
+   region (tables, cards, buttons, pills) proportionally so users can trade a
+   smaller font for less wrapping, or a larger font for readability. Medium is
+   the default (no scaling). The sidebar/header chrome is intentionally left at
+   its base size so navigation stays stable.
+   ------------------------------------------------------------------------- */
+html {
+  --content-zoom: 1;
+}
+html[data-text-size='small']   { --content-zoom: 0.9; }
+html[data-text-size='medium']  { --content-zoom: 1; }
+html[data-text-size='large']   { --content-zoom: 1.15; }
+html[data-text-size='x-large'] { --content-zoom: 1.3; }
+
+.content-area {
+  zoom: var(--content-zoom);
 }
 
 /* -------------------------------------------------------------------------
@@ -346,4 +369,17 @@ textarea:focus {
     box-shadow: none !important;
     background: #ffffff !important;
   }
+}
+
+/* Screen-reader-only utility (visually hidden but announced). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
